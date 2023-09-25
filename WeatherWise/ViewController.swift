@@ -7,6 +7,8 @@
 
 import UIKit
 
+// This file will be the home screen where the weather is displayed for the user's current location and any other locations they choose to add
+
 class ViewController: UIViewController {
 
     override func viewDidLoad() {
