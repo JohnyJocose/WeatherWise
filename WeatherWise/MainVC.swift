@@ -14,7 +14,16 @@ class MainVC: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        configureUI()
     }
-
+    
+    func configureUI() {
+        setBackgroundColor()
+    }
+    
+    // UI Code
+    func setBackgroundColor() {
+        view.backgroundColor = .systemBackground
+    }
 }
 
