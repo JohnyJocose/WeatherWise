@@ -58,8 +58,8 @@
 			children = (
 				D3302FF42AC24A3F003EAEC7 /* AppDelegate.swift */,
 				D3302FF62AC24A3F003EAEC7 /* SceneDelegate.swift */,
-				D33030082AC2529B003EAEC7 /* SettingsVC.swift */,
 				D3302FF82AC24A3F003EAEC7 /* MainVC.swift */,
+				D33030082AC2529B003EAEC7 /* SettingsVC.swift */,
 				D3302FFD2AC24A41003EAEC7 /* Assets.xcassets */,
 				D3302FFF2AC24A41003EAEC7 /* LaunchScreen.storyboard */,
 				D33030022AC24A41003EAEC7 /* Info.plist */,
@@ -284,7 +284,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 3R45N6NL9P;
+				DEVELOPMENT_TEAM = V5YR3KNBNF;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WeatherWise/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
