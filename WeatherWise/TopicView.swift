@@ -20,7 +20,7 @@ class TopicView: UIView {
     init() {
         super.init(frame: .zero)
         
-        backgroundColor = .white.withAlphaComponent(0.9)
+        backgroundColor = .white.withAlphaComponent(0.75)
         layer.cornerRadius = 5
         clipsToBounds = true
         

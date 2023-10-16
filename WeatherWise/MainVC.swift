@@ -26,6 +26,49 @@ class MainVC: UIViewController {
     // Data
     let locationList = ["My Location - Del Valle, Texas", "Austin, Texas", "New York City, New York", "Modesto, California" , "Nnewi, Nigeria", "Orlando, Florida"]
     let imageFileNames = ["Day", "Night", "Sunrise", "Sunset"]
+    let hourlyForcastData = [
+        ["Now", "78°", UIImage(systemName: "moon.fill")!],
+        ["1AM", "78°", UIImage(systemName: "moon.fill")!],
+        ["2AM", "77°", UIImage(systemName: "moon.fill")!],
+        ["3AM", "75°", UIImage(systemName: "moon.fill")!],
+        ["4AM", "73°", UIImage(systemName: "moon.fill")!],
+        ["5AM", "72°", UIImage(systemName: "moon.fill")!],
+        ["6AM", "71°", UIImage(systemName: "sun.max.fill")!],
+        ["7AM", "71°", UIImage(systemName: "sun.max.fill")!],
+        ["8AM", "72°", UIImage(systemName: "sun.max.fill")!],
+        ["9AM", "76°", UIImage(systemName: "sun.max.fill")!],
+        ["10AM", "80°", UIImage(systemName: "sun.max.fill")!],
+        ["11AM", "84°", UIImage(systemName: "sun.max.fill")!],
+        ["12PM", "87°", UIImage(systemName: "sun.max.fill")!],
+        ["1PM", "90°", UIImage(systemName: "sun.max.fill")!],
+        ["2PM", "92°", UIImage(systemName: "sun.max.fill")!],
+        ["3PM", "93°", UIImage(systemName: "sun.max.fill")!],
+        ["4PM", "94°", UIImage(systemName: "sun.max.fill")!],
+        ["5PM", "93°", UIImage(systemName: "sun.max.fill")!],
+        ["6PM", "92°", UIImage(systemName: "sun.max.fill")!],
+        ["7PM", "89°", UIImage(systemName: "moon.fill")!],
+        ["8PM", "85°", UIImage(systemName: "moon.fill")!],
+        ["9PM", "82°", UIImage(systemName: "moon.fill")!],
+        ["10PM", "80°", UIImage(systemName: "moon.fill")!],
+        ["11PM", "78°", UIImage(systemName: "moon.fill")!],
+        ]
+    
+    
+    let tenDayForcastData = [
+        ["Today", "L:80° H:105°", UIImage(systemName: "sun.max.fill")!],
+        ["Monday", "L:83° H:107°", UIImage(systemName: "sun.max.fill")!],
+        ["Tuesday", "L:85° H:108°", UIImage(systemName: "cloud.sun")!],
+        ["Wednesday", "L:83° H:106°", UIImage(systemName: "cloud.sun")!],
+        ["Thursday", "L:82° H:104°", UIImage(systemName: "cloud.sun")!],
+        ["Friday", "L:79° H:100°", UIImage(systemName: "cloud.sun.rain")!],
+        ["Saturday", "L:68° H:99°", UIImage(systemName: "cloud.sun.rain")!],
+        ["Sunday", "L:67° H:89°", UIImage(systemName: "cloud.sun.bolt.fill")!],
+        ["Monday", "L:75° H:96°", UIImage(systemName: "cloud.sun.rain")!],
+        ["Tuesday", "L:80° H:104°", UIImage(systemName: "cloud.sun")!],
+        ]
+
+    
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,7 +84,11 @@ class MainVC: UIViewController {
     }
     
     @objc func buttonPressed(_ sender: UIButton) {
+        let nextVC = UINavigationController(rootViewController: LocationVC())
+        nextVC.navigationBar.prefersLargeTitles = true
         
+        nextVC.modalPresentationStyle = .fullScreen
+        present(nextVC, animated: true)
     }
     
     func matchBackgroundToLocation() {
@@ -77,10 +124,236 @@ class MainVC: UIViewController {
         matchBackgroundToLocation()
     }
     
-    // Weatherview UI code
+    
+    // configure each topic views content
+    func configureViewsContents(dayForecast: UIView, tenDayForcast: UIView, humidity: UIView, feelsLike: UIView, moonPhase: UIView, sunsetTime: UIView) {
+        configureDayForecast(dayForecastView: dayForecast)
+        configureTenDayForecast(tenDayForecastView: tenDayForcast)
+        configureHumidity(humidityView: humidity)
+        configureFeelsLike(feelsLikeView: feelsLike)
+        configureMoonPhase(moonPhaseView: moonPhase)
+        configureSunset(sunsetView: sunsetTime)
+        
+    }
+    
+    func configureSunset(sunsetView: UIView) {
+        
+        let sunsetTimeLabel = UILabel()
+        sunsetTimeLabel.text = "12:59 PM"
+        sunsetTimeLabel.font = .boldSystemFont(ofSize: 35)
+        sunsetTimeLabel.textColor = .black
+        sunsetTimeLabel.numberOfLines = 1
+        sunsetTimeLabel.textAlignment = .center
+        sunsetTimeLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        sunsetView.addSubview(sunsetTimeLabel)
+        NSLayoutConstraint.activate([
+            sunsetTimeLabel.topAnchor.constraint(equalTo: sunsetView.topAnchor),
+            sunsetTimeLabel.bottomAnchor.constraint(equalTo: sunsetView.bottomAnchor),
+            sunsetTimeLabel.leadingAnchor.constraint(equalTo: sunsetView.leadingAnchor),
+            sunsetTimeLabel.trailingAnchor.constraint(equalTo: sunsetView.trailingAnchor)
+        ])
+        
+        let titleLabel = UILabel()
+        titleLabel.text = "Sunset"
+        titleLabel.font = .boldSystemFont(ofSize: 20)
+        titleLabel.textColor = .black
+        titleLabel.numberOfLines = 1
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        sunsetView.addSubview(titleLabel)
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: sunsetView.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: sunsetView.trailingAnchor),
+            
+            titleLabel.heightAnchor.constraint(equalToConstant: 29),
+            titleLabel.topAnchor.constraint(equalTo: sunsetView.topAnchor, constant: 8)
+        ])
+    }
+    
+    func configureMoonPhase(moonPhaseView: UIView) {
+        let moonPhaseImageView = UIImageView()
+        moonPhaseImageView.image = UIImage(systemName: "moonphase.waxing.gibbous.inverse")
+        moonPhaseImageView.contentMode = .scaleAspectFit
+        moonPhaseImageView.tintColor = .black
+        moonPhaseImageView.translatesAutoresizingMaskIntoConstraints = false
+        
+        moonPhaseView.addSubview(moonPhaseImageView)
+        NSLayoutConstraint.activate([
+            moonPhaseImageView.centerXAnchor.constraint(equalTo: moonPhaseView.centerXAnchor),
+            moonPhaseImageView.centerYAnchor.constraint(equalTo: moonPhaseView.centerYAnchor),
+            moonPhaseImageView.widthAnchor.constraint(equalTo: moonPhaseView.widthAnchor, multiplier: 1/2),
+            moonPhaseImageView.heightAnchor.constraint(equalTo: moonPhaseView.widthAnchor, multiplier: 1/2)
+        ])
+        
+        
+        let titleLabel = UILabel()
+        titleLabel.text = "Moon Phase"
+        titleLabel.font = .boldSystemFont(ofSize: 20)
+        titleLabel.textColor = .black
+        titleLabel.numberOfLines = 1
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        moonPhaseView.addSubview(titleLabel)
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: moonPhaseView.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: moonPhaseView.trailingAnchor),
+            
+            titleLabel.heightAnchor.constraint(equalToConstant: 29),
+            titleLabel.topAnchor.constraint(equalTo: moonPhaseView.topAnchor, constant: 8)
+        ])
+    }
+    
+    func configureFeelsLike(feelsLikeView: UIView) {
+        let tempLabel = UILabel()
+        tempLabel.text = "110°"
+        tempLabel.font = .boldSystemFont(ofSize: 35)
+        tempLabel.textColor = .black
+        tempLabel.numberOfLines = 1
+        tempLabel.textAlignment = .center
+        tempLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        feelsLikeView.addSubview(tempLabel)
+        NSLayoutConstraint.activate([
+            tempLabel.topAnchor.constraint(equalTo: feelsLikeView.topAnchor),
+            tempLabel.bottomAnchor.constraint(equalTo: feelsLikeView.bottomAnchor),
+            tempLabel.leadingAnchor.constraint(equalTo: feelsLikeView.leadingAnchor),
+            tempLabel.trailingAnchor.constraint(equalTo: feelsLikeView.trailingAnchor)
+        ])
+        
+        let titleLabel = UILabel()
+        titleLabel.text = "Feels Like"
+        titleLabel.font = .boldSystemFont(ofSize: 20)
+        titleLabel.textColor = .black
+        titleLabel.numberOfLines = 1
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        feelsLikeView.addSubview(titleLabel)
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: feelsLikeView.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: feelsLikeView.trailingAnchor),
+            
+            titleLabel.heightAnchor.constraint(equalToConstant: 29),
+            titleLabel.topAnchor.constraint(equalTo: feelsLikeView.topAnchor, constant: 8)
+        ])
+    }
+    
+    func configureHumidity(humidityView: UIView) {
+        let humidityLabel = UILabel()
+        humidityLabel.text = "50%"
+        humidityLabel.font = .boldSystemFont(ofSize: 35)
+        humidityLabel.textColor = .black
+        humidityLabel.numberOfLines = 1
+        humidityLabel.textAlignment = .center
+        humidityLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        humidityView.addSubview(humidityLabel)
+        NSLayoutConstraint.activate([
+            humidityLabel.topAnchor.constraint(equalTo: humidityView.topAnchor),
+            humidityLabel.bottomAnchor.constraint(equalTo: humidityView.bottomAnchor),
+            humidityLabel.leadingAnchor.constraint(equalTo: humidityView.leadingAnchor),
+            humidityLabel.trailingAnchor.constraint(equalTo: humidityView.trailingAnchor)
+        ])
+        
+        let titleLabel = UILabel()
+        titleLabel.text = "Humidity"
+        titleLabel.font = .boldSystemFont(ofSize: 20)
+        titleLabel.textColor = .black
+        titleLabel.numberOfLines = 1
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        humidityView.addSubview(titleLabel)
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: humidityView.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: humidityView.trailingAnchor),
+            
+            titleLabel.heightAnchor.constraint(equalToConstant: 29),
+            titleLabel.topAnchor.constraint(equalTo: humidityView.topAnchor, constant: 8)
+        ])
+    }
+    
+    func configureTenDayForecast(tenDayForecastView: UIView) {
+        let titleLabel = UILabel()
+        titleLabel.text = "Ten Day Forecast"
+        titleLabel.font = .boldSystemFont(ofSize: 20)
+        titleLabel.textColor = .black
+        titleLabel.numberOfLines = 1
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        tenDayForecastView.addSubview(titleLabel)
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: tenDayForecastView.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: tenDayForecastView.trailingAnchor),
+            
+            titleLabel.heightAnchor.constraint(equalToConstant: 29),
+            titleLabel.topAnchor.constraint(equalTo: tenDayForecastView.topAnchor, constant: 8)
+        ])
+        
+        let tenDayForecastTableView = UITableView()
+        tenDayForecastTableView.backgroundColor = .clear
+        tenDayForecastTableView.delegate = self
+        tenDayForecastTableView.dataSource = self
+        tenDayForecastTableView.register(TenDayForecastCell.self, forCellReuseIdentifier: "dayCell")
+        tenDayForecastTableView.rowHeight = 40
+        tenDayForecastTableView.isScrollEnabled = false
+        
+        tenDayForecastTableView.translatesAutoresizingMaskIntoConstraints = false
+        
+        tenDayForecastView.addSubview(tenDayForecastTableView)
+        NSLayoutConstraint.activate([
+            tenDayForecastTableView.leadingAnchor.constraint(equalTo: tenDayForecastView.leadingAnchor),
+            tenDayForecastTableView.trailingAnchor.constraint(equalTo: tenDayForecastView.trailingAnchor),
+            tenDayForecastTableView.bottomAnchor.constraint(equalTo: tenDayForecastView.bottomAnchor),
+            tenDayForecastTableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor)
+        ])
+    }
+    
+    func configureDayForecast(dayForecastView: UIView) {
+        
+        let titleLabel = UILabel()
+        titleLabel.text = "Forecast"
+        titleLabel.font = .boldSystemFont(ofSize: 20)
+        titleLabel.textColor = .black
+        titleLabel.numberOfLines = 1
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        dayForecastView.addSubview(titleLabel)
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: dayForecastView.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: dayForecastView.trailingAnchor),
+            
+            titleLabel.heightAnchor.constraint(equalToConstant: 29),
+            titleLabel.topAnchor.constraint(equalTo: dayForecastView.topAnchor, constant: 8)
+        ])
+        
+        let collectionLayout = UICollectionViewFlowLayout()
+        collectionLayout.scrollDirection = .horizontal
+        let hourlyForecastCollectionView = UICollectionView(frame: .zero, collectionViewLayout: collectionLayout)
+        hourlyForecastCollectionView.backgroundColor = .clear
+        hourlyForecastCollectionView.delegate = self
+        hourlyForecastCollectionView.dataSource = self
+        hourlyForecastCollectionView.showsHorizontalScrollIndicator = false
+        hourlyForecastCollectionView.register(HourlyForecastCell.self, forCellWithReuseIdentifier: "hourCell")
+        
+        hourlyForecastCollectionView.translatesAutoresizingMaskIntoConstraints = false
+        
+        dayForecastView.addSubview(hourlyForecastCollectionView)
+        NSLayoutConstraint.activate([
+            hourlyForecastCollectionView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
+            hourlyForecastCollectionView.bottomAnchor.constraint(equalTo: dayForecastView.bottomAnchor, constant: -8),
+            hourlyForecastCollectionView.leadingAnchor.constraint(equalTo: dayForecastView.leadingAnchor),
+            hourlyForecastCollectionView.trailingAnchor.constraint(equalTo: dayForecastView.trailingAnchor)
+        ])
+    }
     
     
-    
+    // Set topicViews in each Weatherview code
     func setForecastLabels(pageView: UIView, location: String, temperature: Int, weather: String, high: Int, low: Int) -> UIStackView {
         let verticalStack = UIStackView()
         verticalStack.axis = .vertical
@@ -152,7 +425,7 @@ class MainVC: UIViewController {
         pageView.addSubview(tenDayForcastView)
         NSLayoutConstraint.activate([
             tenDayForcastView.widthAnchor.constraint(equalTo: pageView.widthAnchor, multiplier: 7/8),
-            tenDayForcastView.heightAnchor.constraint(equalToConstant: 400),
+            tenDayForcastView.heightAnchor.constraint(equalToConstant: 437),
             tenDayForcastView.centerXAnchor.constraint(equalTo: pageView.centerXAnchor),
             tenDayForcastView.topAnchor.constraint(equalTo: topUIElement.bottomAnchor, constant: 40)
         ])
@@ -283,7 +556,7 @@ class MainVC: UIViewController {
             
 
             
-            let forecastStack = setForecastLabels(pageView: weatherView, location: locationList[pageCount], temperature: 99, weather: "Sunny", high: 105, low: 79)
+            let forecastStack = setForecastLabels(pageView: weatherView, location: locationList[pageCount], temperature: 78, weather: "Sunny", high: 105, low: 79)
             
             let forecastView = setForcastView(pageView: weatherView, topUIElement: forecastStack)
             
@@ -293,6 +566,7 @@ class MainVC: UIViewController {
             
             let moonSunsetViewsTuple = setMoonPhaseAndSunset(pageView: weatherView, topLeftUIElement: humidFeelsViewsTuple.0, topRightUIElement: humidFeelsViewsTuple.1)
             
+            configureViewsContents(dayForecast: forecastView, tenDayForcast: tenForecastView, humidity: humidFeelsViewsTuple.0, feelsLike: humidFeelsViewsTuple.1, moonPhase: moonSunsetViewsTuple.0, sunsetTime: moonSunsetViewsTuple.1)
             
             
         }
@@ -381,25 +655,72 @@ class MainVC: UIViewController {
     }
 }
 
+extension MainVC: UITableViewDelegate, UITableViewDataSource {
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        tenDayForcastData.count
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "dayCell", for: indexPath) as! TenDayForecastCell
+        
+        cell.backgroundColor = .clear
+        
+        cell.setTenLabelsAndPicture(day: tenDayForcastData[indexPath.row][0] as! String,
+                                    highLow: tenDayForcastData[indexPath.row][1] as! String,
+                                    icon: tenDayForcastData[indexPath.row][2] as! UIImage)
+        
+        
+        return cell
+        
+    }
+    
+    
+}
+
+extension MainVC: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        collectionView.deselectItem(at: indexPath, animated: true)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return hourlyForcastData.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let collectionCell = collectionView.dequeueReusableCell(withReuseIdentifier: "hourCell", for: indexPath) as! HourlyForecastCell
+        
+        collectionCell.setPictureAndText(hour: hourlyForcastData[indexPath.row][0] as! String,
+                                         temp: hourlyForcastData[indexPath.row][1] as! String,
+                                         weatherIcon: hourlyForcastData[indexPath.row][2] as! UIImage)
+        
+        return collectionCell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: collectionView.frame.width / 6.5, height: collectionView.frame.height)
+    }
+    
+    
+}
+
+
 extension MainVC: UIScrollViewDelegate {
     
     //func isDifferentPage()
     // This function is called every time we scroll in the scroll view. Here, we update the page control to match where we are in the scroll view.
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         
-        weatherPageControl.currentPage = Int(round(Float((scrollView.contentOffset.x)) / Float(scrollView.frame.width)))
+        // have to use self because i want to reference the scrollview variabel i made above and since they share a name not having self would reference all scrollviews instead
+        weatherPageControl.currentPage = Int(round(Float((self.scrollView.contentOffset.x)) / Float(self.scrollView.frame.width)))
         if oldPageTracker != weatherPageControl.currentPage {
             oldPageTracker = weatherPageControl.currentPage
             matchBackgroundToLocation()
         }
-        
-        
     }
-    
-    
-    
-    
-    
-    
-    
 }
