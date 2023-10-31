@@ -11,18 +11,16 @@ class LocationVC: UIViewController {
 
     
     let locationTable = UITableView(frame: .zero, style: .plain)
+    let searchBarController = UISearchController(searchResultsController: SearchVC())
     
-    
-    // Data
-//    let locationList = ["My Location - Del Valle, Texas", "Austin, Texas", "New York City, New York", "Modesto, California" , "Nnewi, Nigeria", "Orlando, Florida", "My Location - Del Valle, Texas", "Austin, Texas", "New York City, New York", "Modesto, California" , "Nnewi, Nigeria", "Orlando, Florida", "My Location - Del Valle, Texas", "Austin, Texas", "New York City, New York", "Modesto, California" , "Nnewi, Nigeria", "Orlando, Florida", "My Location - Del Valle, Texas", "Austin, Texas", "New York City, New York", "Modesto, California" , "Nnewi, Nigeria", "Orlando, Florida", "My Location - Del Valle, Texas", "Austin, Texas", "New York City, New York", "Modesto, California" , "Nnewi, Nigeria", "Orlando, Florida", "My Location - Del Valle, Texas", "Austin, Texas", "New York City, New York", "Modesto, California" , "Nnewi, Nigeria", "Orlando, Florida", "My Location - Del Valle, Texas", "Austin, Texas", "New York City, New York", "Modesto, California" , "Nnewi, Nigeria", "Orlando, Florida", "My Location - Del Valle, Texas", "Austin, Texas", "New York City, New York", "Modesto, California" , "Nnewi, Nigeria", "Orlando, Florida"]
-    var locationList = ["My Location - Del Valle, Texas", "Austin, Texas", "New York City, New York", "Modesto, California" , "Nnewi, Nigeria", "Orlando, Florida"]
-    
+    //var delegate: MainVC!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
         
     }
+    
     
     func configureUI () {
         view.backgroundColor = .systemBackground
@@ -47,6 +45,10 @@ class LocationVC: UIViewController {
         ])
     }
     
+    func reloadTable() {
+        locationTable.reloadData()
+    }
+    
     @objc func buttonPressed(_ sender:UIButton) {
         if locationTable.isEditing {
             locationTable.isEditing = false
@@ -64,7 +66,7 @@ class LocationVC: UIViewController {
         navigationItem.rightBarButtonItem = editButton
         
         
-        let searchBarController = UISearchController(searchResultsController: SearchVC())
+        
         searchBarController.obscuresBackgroundDuringPresentation = true
         searchBarController.searchResultsUpdater = self
         self.navigationItem.searchController = searchBarController
@@ -88,13 +90,13 @@ extension LocationVC: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        locationList.count
+        return usersInfo.returnUsersLocationsCount()
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "locationCell", for: indexPath)
         var content = cell.defaultContentConfiguration()
-        content.text = locationList[indexPath.row]
+        content.text = usersInfo.returnLocationNameForLocationVC(at: indexPath.row)
         cell.contentConfiguration = content
         
         return cell
@@ -119,18 +121,16 @@ extension LocationVC: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        let removedElement = locationList.remove(at: sourceIndexPath.row)
-        locationList.insert(removedElement, at: destinationIndexPath.row)
-        //print(locationList)
+        let removedElement = usersInfo.removeLocation(at: sourceIndexPath.row)
+        usersInfo.insertRemovedLocation(removedLocation: removedElement, at: destinationIndexPath.row)
     }
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             tableView.beginUpdates()
-            locationList.remove(at: indexPath.row)
+            usersInfo.deleteLocation(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
             tableView.endUpdates()
-            //print(locationList)
         }
     }
 
@@ -142,8 +142,8 @@ extension LocationVC: UISearchResultsUpdating {
             return
         }
         let vc = searchController.searchResultsController as! SearchVC
+        vc.delegate = self
         vc.updateUsingSearchBarsText(text: text)
-        //print(text)
         
     }
     

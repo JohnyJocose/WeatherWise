@@ -25,11 +25,11 @@ class CityClass {
 
 class SearchVC: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
-    let cityData = ["Abilene", "Alpine", "Amarillo", "Arlington", "Austin", "Baytown", "Beaumont", "Big Spring", "Borger", "Brownsville", "Bryan", "Canyon", "Cleburne", "College Station", "Corpus Christi", "Crystal City", "Dallas", "Del Rio", "Denison", "Denton", "Eagle Pass", "Edinburg", "El Paso", "Fort Worth", "Freeport", "Galveston", "Garland", "Goliad", "Greenville", "Harlingen", "Houston", "Huntsville", "Irving", "Johnson City", "Kilgore", "Killeen", "Kingsville", "Laredo", "Longview", "Lubbock", "Lufkin", "Marshall", "McAllen", "McKinney", "Mesquite", "Midland", "Mission", "Nacogdoches", "New Braunfels", "Odessa", "Orange", "Pampa", "Paris", "Pasadena", "Pecos", "Pharr", "Plainview", "Plano", "Port Arthur", "Port Lavaca", "Richardson", "San Angelo", "San Antonio", "San Felipe", "San Marcos", "Sherman", "Sweetwater", "Temple", "Texarkana", "Texas City", "Tyler", "Uvalde", "Victoria", "Waco", "Weatherford", "Wichita Falls", "Ysleta"]
-    
     var searchData: [CityClass] = []
     
     let areaTableView = UITableView()
+    
+    var delegate: LocationVC!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -97,6 +97,7 @@ class SearchVC: UIViewController, UITableViewDataSource, UITableViewDelegate {
         
         
         let vc = SingularWeatherPageVC()
+        vc.delegate = self
         vc.locationClass = searchData[indexPath.row]
         present(vc, animated: true)
         

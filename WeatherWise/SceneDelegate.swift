@@ -21,9 +21,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(frame: windowScene.coordinateSpace.bounds)
         window?.windowScene = windowScene
         
-//        let nav = UINavigationController(rootViewController: MainVC())
-//        nav.navigationBar.prefersLargeTitles = true
-        window?.rootViewController = MainVC()
+        if usersInfo.isFirstTimeBootingApp() {
+            window?.rootViewController = MainVC()
+        }
+        else {
+            window?.rootViewController = MainVC()
+        }
+        
+        
         window?.makeKeyAndVisible()
     }
 
