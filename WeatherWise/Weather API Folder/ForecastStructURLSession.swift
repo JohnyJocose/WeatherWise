@@ -181,7 +181,7 @@ struct AstroResult: Codable {
     let moonrise: String
     let moonset: String
     let moonPhase: String
-    let moonIllumination: String
+    let moonIllumination: Decimal
 }
 
 struct DayResult: Codable {

@@ -10,7 +10,6 @@ import UIKit
 class SingularWeatherPageVC: UIViewController {
     
     var delegate: SearchVC!
-    var enableLocationDelegate: EnableLocationVC!
     
     let backgroundImage = UIImageView()
     
@@ -98,17 +97,8 @@ class SingularWeatherPageVC: UIViewController {
             if delegate != nil {
                 delegate.delegate.reloadTable()
                 delegate.delegate.searchBarController.dismiss(animated: false)
-                dismiss(animated: true)
             }
-            if enableLocationDelegate != nil {
-                
-//                //enableLocationDelegate.modallyPresentToMainVC()
-//                dismiss(animated: true, completion: enableLocationDelegate.modallyPresentToMainVC)
-                
-                let nextVC = MainVC()
-                nextVC.modalPresentationStyle = .fullScreen
-                present(nextVC, animated: true)
-            }
+            dismiss(animated: true)
             
             
             

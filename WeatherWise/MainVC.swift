@@ -17,12 +17,12 @@ class MainVC: UIViewController {
     
     // Data
 //    var locationList = usersInfo.locationsForecastArray
-    var hourlyForecastData: [[HourResult]] = []
-    var threeDayForecastData: [[ForecastDayResult]] = []
+//    var hourlyForecastData: [[HourResult]] = []
+//    var threeDayForecastData: [[ForecastDayResult]] = []
     
     
     var scrollViewsList: [UIScrollView] = []
-    var weatherViewsList: [WeatherView] = []
+    //var weatherViewsList: [WeatherView] = []
     
     
     let pageScrollView = UIScrollView()
@@ -38,9 +38,20 @@ class MainVC: UIViewController {
     
     func configureUI() {
         setBackgroundColor()
-        configureScrollView(locations: usersInfo.returnUsersLocationsCount())
+        print("the weatherpages count is \(usersInfo.forecastWeatherPages.count)")
+        configureScrollView(locations: usersInfo.forecastWeatherPages.count)
         configureToolBar()
-        makeAndConfigureWeatherViews(locations: usersInfo.returnUsersLocationsCount())
+        makeAndConfigureWeatherViews(locations: usersInfo.forecastWeatherPages.count)
+        
+//        if usersInfo.isFirstTimeBootingApp() {
+//            
+//            LocationService.shared.getUsersLocation { [weak self] location in
+//                guard let strongSelf = self else {return}
+//                usersInfo.addUsersLocationAsFirstArray(lat: Decimal(location.coordinate.latitude), lon: Decimal(location.coordinate.longitude))
+//                
+//            }
+//
+//        }
     }
     
     // MARK: UI Functions
@@ -58,7 +69,11 @@ class MainVC: UIViewController {
     }
     
     func configureScrollView(locations: Int) {
+        
+        
         pageScrollView.contentSize = .init(width: view.frame.width * CGFloat(locations), height: view.frame.height)
+        
+        
         pageScrollView.bounces = false
         pageScrollView.isPagingEnabled = true
         pageScrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -80,7 +95,7 @@ class MainVC: UIViewController {
     
     func configureToolBar() {
         
-        configureWeatherPageControl(locations: usersInfo.returnUsersLocationsCount())
+        configureWeatherPageControl(locations: usersInfo.forecastWeatherPages.count)
         let pageItem = UIBarButtonItem(customView: weatherPageControl)
     
         toolBar.barTintColor = UIColor(red: 76/255.0, green: 156/255.0, blue: 169/255.0, alpha: 1)
@@ -102,14 +117,17 @@ class MainVC: UIViewController {
     }
     
     func configureWeatherPageControl(locations: Int) {
+        
         weatherPageControl.numberOfPages = locations
         weatherPageControl.currentPage = 0
         oldPageTracker = weatherPageControl.currentPage
-        weatherPageControl.hidesForSinglePage = true
+        weatherPageControl.hidesForSinglePage = false
         weatherPageControl.addTarget(self, action: #selector(pageControlChanged(_:)), for: .valueChanged)
         
         weatherPageControl.setIndicatorImage(UIImage(systemName: "location.fill"), forPage: 0)
         weatherPageControl.translatesAutoresizingMaskIntoConstraints = false
+    
+        
     }
     
     // Move the scroll view to the position corresponding to the selected page.
@@ -228,21 +246,29 @@ class MainVC: UIViewController {
     }
     
     func makeAndConfigureWeatherViews(locations: Int) {
+
         // Add a view for each user-set location.
-        for _ in usersInfo.locationsForecastArray{
+        for _ in usersInfo.forecastWeatherPages{
             scrollViewsList.append(UIScrollView())
         }
         setWeatherViews(scrolls: scrollViewsList)
         if !usersInfo.isUsersLocationsEmpty() {
-            updateAllWeatherViews()
+            usersInfo.updateAllWeatherViews()
+            
+            let currentTime = usersInfo.locationsForecastArray[weatherPageControl.currentPage].location.localtime
+            let sunsetTime = usersInfo.locationsForecastArray[weatherPageControl.currentPage].forecast.forecastday[0].astro.sunset
+            let sunriseTime = usersInfo.locationsForecastArray[weatherPageControl.currentPage].forecast.forecastday[0].astro.sunrise
+            changeBackgroundBasedOnLocationsTime(currentTime: currentTime, sunset: sunsetTime, sunrise: sunriseTime)
         }
+        
+        
     }
     
     func setWeatherViews(scrolls: [UIScrollView]) {
         
         // For loop to add each view into the scrollview.
         for pageCount in 0..<scrolls.count {
-            let weatherView = WeatherView()
+            let weatherView = usersInfo.forecastWeatherPages[pageCount]
             weatherView.backgroundColor = .clear
             weatherView.translatesAutoresizingMaskIntoConstraints = false
             
@@ -297,9 +323,9 @@ class MainVC: UIViewController {
                 // The height is not set because it will be determined when all the UI elements for the `weatherview` are placed. The `contentsize` will dynamically adjust to fit the `weatherview`'s height.
             ])
             
-            weatherViewsList.append(weatherView)
-            hourlyForecastData.append([])
-            threeDayForecastData.append([])
+//            weatherViewsList.append(weatherView)
+//            hourlyForecastData.append([])
+//            threeDayForecastData.append([])
             
             
         }
@@ -311,118 +337,118 @@ class MainVC: UIViewController {
     
     
     
-    // MARK: CoreData/API Functions
-    func updateAllWeatherViews() {
-        for i in 0..<usersInfo.returnUsersLocationsCount(){
-            updateWeatherViewInfo(weatherView: weatherViewsList[i], forecastInfo: usersInfo.locationsForecastArray[i], index: i)
-        }
-    }
-    
-    func updateWeatherViewInfo(weatherView: WeatherView, forecastInfo: ForecastStruct, index: Int) {
-        
-        populateHourlyForecastData(forecastInfo: forecastInfo, index: index)
-        
-        populateThreeDayForecastData(forecastInfo: forecastInfo, index: index)
-        
-        
-        var tempDecimal: Decimal = forecastInfo.current.tempF
-        var tempDrounded: Decimal = Decimal()
-        NSDecimalRound(&tempDrounded, &tempDecimal, 0, .plain)
-        let tempString = "\(tempDrounded)°"
-        
-        var lowDecimal: Decimal = forecastInfo.forecast.forecastday[0].day.mintempF
-        var lowDrounded: Decimal = Decimal()
-        NSDecimalRound(&lowDrounded, &lowDecimal, 0, .plain)
-        let lowString = "L:\(lowDrounded)°  "
-        
-        var highDecimal: Decimal = forecastInfo.forecast.forecastday[0].day.maxtempF
-        var highDrounded: Decimal = Decimal()
-        NSDecimalRound(&highDrounded, &highDecimal, 0, .plain)
-        let highString = "H:\(highDrounded)°"
-        
-        let highLowString = lowString + highString
-        
-        weatherView.updateStackLabels(location: "\(forecastInfo.location.name), \(forecastInfo.location.region)", temperature: tempString, weather: forecastInfo.current.condition.text, highLow: highLowString)
-        
-        
-        
-        weatherView.updateHourData(hourForecast: hourlyForecastData[index])
-        weatherView.updateThreeDayHourData(threeDayForecast: threeDayForecastData[index])
-        weatherView.updateHumidty(humidity: forecastInfo.current.humidity)
-        weatherView.updateFeelsLike(feelsLike: forecastInfo.current.feelslikeF)
-        weatherView.updateSunset(sunsetTime: forecastInfo.forecast.forecastday[0].astro.sunset)
-        
-        changeBackgroundBasedOnLocationsTime(currentTime: forecastInfo.location.localtime, sunset: forecastInfo.forecast.forecastday[0].astro.sunset, sunrise: forecastInfo.forecast.forecastday[0].astro.sunrise)
-
-    }
-    
-    func populateHourlyForecastData(forecastInfo: ForecastStruct, index: Int) {
-        
-        let timeZoneID = forecastInfo.location.tzId
-        if let date = convertStringToLocalDate(localTimeString: forecastInfo.location.localtime, timeZoneIdentifier: timeZoneID) {
-            var hourIndex: Int = 0
-            
-            var previousHourlyTimeStruct: HourResult! = nil
-            for forecastDay in forecastInfo.forecast.forecastday {
-                for hourForecast in forecastDay.hour {
-                    if let hourlyTime = convertStringToLocalDate(localTimeString: hourForecast.time, timeZoneIdentifier: timeZoneID) {
-                        if hourlyTime > date && hourIndex < 23 {
-                            //print(hourIndex)
-                            //print()
-                            hourlyForecastData[index].append(hourForecast)
-                            hourIndex += 1
-                        }
-                        else if hourIndex < 23 {
-                            previousHourlyTimeStruct = hourForecast
-                        }
-                    }
-                }
-            }
-            
-            let nowHourStruct = HourResult(timeEpoch: forecastInfo.location.localtimeEpoch,
-                                           time: forecastInfo.location.tzId,
-                                           tempC: forecastInfo.current.tempC,
-                                           tempF: forecastInfo.current.tempF,
-                                           condition: forecastInfo.current.condition,
-                                           windMph: forecastInfo.current.windMph,
-                                           windKph: forecastInfo.current.windKph,
-                                           windDegree: forecastInfo.current.windDegree,
-                                           windDir: forecastInfo.current.windDir,
-                                           pressureMb: forecastInfo.current.pressureMb,
-                                           pressureIn: forecastInfo.current.pressureIn,
-                                           precipMm: forecastInfo.current.precipMm,
-                                           precipIn: forecastInfo.current.precipIn,
-                                           humidity: forecastInfo.current.humidity,
-                                           cloud: forecastInfo.current.cloud,
-                                           feelslikeC: forecastInfo.current.feelslikeC,
-                                           feelslikeF: forecastInfo.current.feelslikeF,
-                                           windchillC: previousHourlyTimeStruct.windchillC,
-                                           windchillF: previousHourlyTimeStruct.windchillF,
-                                           heatindexC: previousHourlyTimeStruct.heatindexC,
-                                           heatindexF: previousHourlyTimeStruct.heatindexF,
-                                           dewpointC: previousHourlyTimeStruct.dewpointC,
-                                           dewpointF: previousHourlyTimeStruct.dewpointF,
-                                           willItRain: previousHourlyTimeStruct.willItRain,
-                                           willItSnow: previousHourlyTimeStruct.willItSnow,
-                                           isDay: forecastInfo.current.isDay,
-                                           visKm: previousHourlyTimeStruct.visKm,
-                                           visMiles: previousHourlyTimeStruct.visMiles,
-                                           chanceOfRain: previousHourlyTimeStruct.chanceOfRain,
-                                           chanceOfSnow: previousHourlyTimeStruct.chanceOfSnow,
-                                           gustMph: forecastInfo.current.gustMph,
-                                           gustKph: forecastInfo.current.gustKph,
-                                           uv: forecastInfo.current.uv)
-            
-            hourlyForecastData[index].insert(nowHourStruct, at: 0)
-            
-        }
-    }
-    
-    func populateThreeDayForecastData(forecastInfo: ForecastStruct, index: Int) {
-        for dayForecast in forecastInfo.forecast.forecastday {
-            threeDayForecastData[index].append(dayForecast)
-        }
-    }
+//    // MARK: CoreData/API Functions
+//    func updateAllWeatherViews() {
+//        for i in 0..<usersInfo.returnUsersLocationsCount(){
+//            updateWeatherViewInfo(weatherView: weatherViewsList[i], forecastInfo: usersInfo.locationsForecastArray[i], index: i)
+//        }
+//    }
+//    
+//    func updateWeatherViewInfo(weatherView: WeatherView, forecastInfo: ForecastStruct, index: Int) {
+//        
+//        populateHourlyForecastData(forecastInfo: forecastInfo, index: index)
+//        
+//        populateThreeDayForecastData(forecastInfo: forecastInfo, index: index)
+//        
+//        
+//        var tempDecimal: Decimal = forecastInfo.current.tempF
+//        var tempDrounded: Decimal = Decimal()
+//        NSDecimalRound(&tempDrounded, &tempDecimal, 0, .plain)
+//        let tempString = "\(tempDrounded)°"
+//        
+//        var lowDecimal: Decimal = forecastInfo.forecast.forecastday[0].day.mintempF
+//        var lowDrounded: Decimal = Decimal()
+//        NSDecimalRound(&lowDrounded, &lowDecimal, 0, .plain)
+//        let lowString = "L:\(lowDrounded)°  "
+//        
+//        var highDecimal: Decimal = forecastInfo.forecast.forecastday[0].day.maxtempF
+//        var highDrounded: Decimal = Decimal()
+//        NSDecimalRound(&highDrounded, &highDecimal, 0, .plain)
+//        let highString = "H:\(highDrounded)°"
+//        
+//        let highLowString = lowString + highString
+//        
+//        weatherView.updateStackLabels(location: "\(forecastInfo.location.name), \(forecastInfo.location.region)", temperature: tempString, weather: forecastInfo.current.condition.text, highLow: highLowString)
+//        
+//        
+//        
+//        weatherView.updateHourData(hourForecast: hourlyForecastData[index])
+//        weatherView.updateThreeDayHourData(threeDayForecast: threeDayForecastData[index])
+//        weatherView.updateHumidty(humidity: forecastInfo.current.humidity)
+//        weatherView.updateFeelsLike(feelsLike: forecastInfo.current.feelslikeF)
+//        weatherView.updateSunset(sunsetTime: forecastInfo.forecast.forecastday[0].astro.sunset)
+//        
+//        changeBackgroundBasedOnLocationsTime(currentTime: forecastInfo.location.localtime, sunset: forecastInfo.forecast.forecastday[0].astro.sunset, sunrise: forecastInfo.forecast.forecastday[0].astro.sunrise)
+//
+//    }
+//    
+//    func populateHourlyForecastData(forecastInfo: ForecastStruct, index: Int) {
+//        
+//        let timeZoneID = forecastInfo.location.tzId
+//        if let date = convertStringToLocalDate(localTimeString: forecastInfo.location.localtime, timeZoneIdentifier: timeZoneID) {
+//            var hourIndex: Int = 0
+//            
+//            var previousHourlyTimeStruct: HourResult! = nil
+//            for forecastDay in forecastInfo.forecast.forecastday {
+//                for hourForecast in forecastDay.hour {
+//                    if let hourlyTime = convertStringToLocalDate(localTimeString: hourForecast.time, timeZoneIdentifier: timeZoneID) {
+//                        if hourlyTime > date && hourIndex < 23 {
+//                            //print(hourIndex)
+//                            //print()
+//                            hourlyForecastData[index].append(hourForecast)
+//                            hourIndex += 1
+//                        }
+//                        else if hourIndex < 23 {
+//                            previousHourlyTimeStruct = hourForecast
+//                        }
+//                    }
+//                }
+//            }
+//            
+//            let nowHourStruct = HourResult(timeEpoch: forecastInfo.location.localtimeEpoch,
+//                                           time: forecastInfo.location.tzId,
+//                                           tempC: forecastInfo.current.tempC,
+//                                           tempF: forecastInfo.current.tempF,
+//                                           condition: forecastInfo.current.condition,
+//                                           windMph: forecastInfo.current.windMph,
+//                                           windKph: forecastInfo.current.windKph,
+//                                           windDegree: forecastInfo.current.windDegree,
+//                                           windDir: forecastInfo.current.windDir,
+//                                           pressureMb: forecastInfo.current.pressureMb,
+//                                           pressureIn: forecastInfo.current.pressureIn,
+//                                           precipMm: forecastInfo.current.precipMm,
+//                                           precipIn: forecastInfo.current.precipIn,
+//                                           humidity: forecastInfo.current.humidity,
+//                                           cloud: forecastInfo.current.cloud,
+//                                           feelslikeC: forecastInfo.current.feelslikeC,
+//                                           feelslikeF: forecastInfo.current.feelslikeF,
+//                                           windchillC: previousHourlyTimeStruct.windchillC,
+//                                           windchillF: previousHourlyTimeStruct.windchillF,
+//                                           heatindexC: previousHourlyTimeStruct.heatindexC,
+//                                           heatindexF: previousHourlyTimeStruct.heatindexF,
+//                                           dewpointC: previousHourlyTimeStruct.dewpointC,
+//                                           dewpointF: previousHourlyTimeStruct.dewpointF,
+//                                           willItRain: previousHourlyTimeStruct.willItRain,
+//                                           willItSnow: previousHourlyTimeStruct.willItSnow,
+//                                           isDay: forecastInfo.current.isDay,
+//                                           visKm: previousHourlyTimeStruct.visKm,
+//                                           visMiles: previousHourlyTimeStruct.visMiles,
+//                                           chanceOfRain: previousHourlyTimeStruct.chanceOfRain,
+//                                           chanceOfSnow: previousHourlyTimeStruct.chanceOfSnow,
+//                                           gustMph: forecastInfo.current.gustMph,
+//                                           gustKph: forecastInfo.current.gustKph,
+//                                           uv: forecastInfo.current.uv)
+//            
+//            hourlyForecastData[index].insert(nowHourStruct, at: 0)
+//            
+//        }
+//    }
+//    
+//    func populateThreeDayForecastData(forecastInfo: ForecastStruct, index: Int) {
+//        for dayForecast in forecastInfo.forecast.forecastday {
+//            threeDayForecastData[index].append(dayForecast)
+//        }
+//    }
     
     @objc func buttonPressed(_ sender: UIButton) {
         let nextVC = UINavigationController(rootViewController: LocationVC())
@@ -459,30 +485,7 @@ extension MainVC: UIScrollViewDelegate {
     }
 }
 
-// MARK: Date Object Functions
-extension MainVC {
-    
-    func convertStringToLocalDate(localTimeString: String, timeZoneIdentifier: String) -> Date? {
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd H:mm"
-        // Set the time zone based on the provided time zone identifier
-        if let timeZone = TimeZone(identifier: timeZoneIdentifier) {
-            dateFormatter.timeZone = timeZone
-        } else {
-            print("Invalid time zone identifier.")
-            return nil
-        }
-        // Parse the local time string into a Date object
-        if let date = dateFormatter.date(from: localTimeString) {
-            return date
-        } else {
-            print("Failed to convert the local time string to a Date object.")
-            return nil
-        }
-    }
-    
-}
+
 
 
     
