@@ -14,6 +14,8 @@ class WeatherView: UIView {
     let weatherLabel = UILabel()
     let highLowLabel = UILabel()
     
+    var timeZoneName = ""
+    
     var hourlyForecastCollectionView: UICollectionView = {
         let collectionLayout = UICollectionViewFlowLayout()
         collectionLayout.scrollDirection = .horizontal
@@ -380,6 +382,11 @@ class WeatherView: UIView {
     
     
     // MARK: API/CoreData Functions
+    
+    func updateTimeZone(timeZoneID: String) {
+        timeZoneName = timeZoneID
+    }
+    
     func updateStackLabels(location: String, temperature: String, weather: String, highLow: String) {
         locationLabel.text = location
         tempLabel.text = temperature
@@ -388,13 +395,18 @@ class WeatherView: UIView {
     }
     
     func updateHourData(hourForecast: [HourResult]) {
+        hourForecastData = []
+        hourlyForecastCollectionView.reloadData()
         hourForecastData = hourForecast
         hourlyForecastCollectionView.reloadData()
     }
     
     func updateThreeDayHourData(threeDayForecast: [ForecastDayResult]) {
+        threeDayForecastData = []
+        threeDayForecastTableView.reloadData()
         threeDayForecastData = threeDayForecast
         threeDayForecastTableView.reloadData()
+        
     }
     
     func updateHumidty(humidity: Int) {
@@ -449,6 +461,7 @@ extension WeatherView: UITableViewDelegate, UITableViewDataSource {
         
         cell.backgroundColor = .clear
         
+        cell.selectionStyle = .none
         if !threeDayForecastData.isEmpty {
             var lowDecimal: Decimal = threeDayForecastData[indexPath.row].day.mintempF
             var lowDrounded: Decimal = Decimal()
@@ -495,10 +508,10 @@ extension WeatherView: UICollectionViewDelegate, UICollectionViewDataSource, UIC
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let collectionCell = collectionView.dequeueReusableCell(withReuseIdentifier: "hourCell", for: indexPath) as! HourlyForecastCell
-        
         if !hourForecastData.isEmpty {
             if indexPath.row != 0 {
-                let timeZoneID = hourForecastData[0].time
+
+                let timeZoneID = timeZoneName
                 let localTime = hourForecastData[indexPath.row].time
                 let hourString = convertStringToLocalHourTime(localTimeString: localTime, timeZoneIdentifier: timeZoneID)
                 

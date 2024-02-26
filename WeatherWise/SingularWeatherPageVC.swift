@@ -93,10 +93,17 @@ class SingularWeatherPageVC: UIViewController {
     
     @objc func addButtonPressed(_ sender:UIButton) {
         if let addLocationStruct {
+            if usersInfo.isUsersLocationsEmpty() {
+                usersInfo.forecastWeatherPages.removeAll()
+            }
+            usersInfo.addWeatherPage()
+            
             usersInfo.addLocation(location: addLocationStruct)
+            
             if delegate != nil {
                 delegate.delegate.reloadTable()
                 delegate.delegate.searchBarController.dismiss(animated: false)
+                delegate.delegate.mainDelegate.updateScrollView()
             }
             dismiss(animated: true)
             

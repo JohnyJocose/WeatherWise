@@ -5,21 +5,34 @@
 //  Created by Johnathan Huijon on 10/1/23.
 //
 
+
+// lastly once we are done with that its on to... core data
+
 import UIKit
 
 class LocationVC: UIViewController {
-
+    
     
     let locationTable = UITableView(frame: .zero, style: .plain)
     let searchBarController = UISearchController(searchResultsController: SearchVC())
     
-    //var delegate: MainVC!
+    var editButton = UIBarButtonItem()
+    
+    
+    
+    var mainDelegate: MainVC!
+    
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        navigationItem.hidesBackButton = true
+        usersInfo.locationDelegate = self
         
     }
+    
+
     
     
     func configureUI () {
@@ -43,6 +56,7 @@ class LocationVC: UIViewController {
             locationTable.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             locationTable.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
+        
     }
     
     func reloadTable() {
@@ -51,17 +65,41 @@ class LocationVC: UIViewController {
     
     @objc func buttonPressed(_ sender:UIButton) {
         if locationTable.isEditing {
+            mainDelegate.updateScrollView()
+            sender.tintColor = .white
             locationTable.isEditing = false
         }
         else {
-            locationTable.isEditing = true
+            
+            if usersInfo.isLocationEnabled() {
+                if usersInfo.returnUsersLocationsCount() != 1 {
+                    sender.tintColor = .gray
+                    locationTable.isEditing = true
+                }
+            }
+            
+            if !usersInfo.isLocationEnabled() {
+                if usersInfo.returnUsersLocationsCount() != 0 {
+                    sender.tintColor = .gray
+                    locationTable.isEditing = true
+                }
+            }
+            
+            
         }
     }
+    
+    func changeTableEditing(status:Bool) {
+        locationTable.isEditing = status
+    }
+    
+    
     
 
     func configureNavBar() {
         navigationItem.title = "Weather"
-        let editButton = UIBarButtonItem(image: UIImage(systemName: "pencil"), style: .plain, target: self, action: #selector(buttonPressed(_:)))
+
+        editButton = UIBarButtonItem(image: UIImage(systemName: "pencil"), style: .plain, target: self, action: #selector(buttonPressed(_:)))
         editButton.tintColor = .white
         navigationItem.rightBarButtonItem = editButton
         
@@ -75,18 +113,18 @@ class LocationVC: UIViewController {
 
     }
 
-
-
-
-
 }
 
 extension LocationVC: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        //navigationController?.dismiss(animated: true)
-        dismiss(animated: true)
+        if let mainDelegate {
+            mainDelegate.changeScrollViewBasedOnArray(index: indexPath.row)
+            mainDelegate.changeNumberOfPagesInPageControl(arrayCount: usersInfo.returnUsersLocationsCount(), currentPage: indexPath.row)
+        }
+        
+        navigationController?.popViewController(animated: true)
+        
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -103,8 +141,11 @@ extension LocationVC: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        if indexPath.row == 0 {
-            return false
+        
+        if usersInfo.isLocationEnabled() {
+            if indexPath.row == 0 {
+                return false
+            }
         }
         return true
     }
@@ -114,9 +155,13 @@ extension LocationVC: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, targetIndexPathForMoveFromRowAt sourceIndexPath: IndexPath, toProposedIndexPath proposedDestinationIndexPath: IndexPath) -> IndexPath {
-        if proposedDestinationIndexPath.row == 0 {
-            return IndexPath.init(row: 1, section: proposedDestinationIndexPath.section)
+        
+        if usersInfo.isLocationEnabled() {
+            if proposedDestinationIndexPath.row == 0 {
+                return IndexPath.init(row: 1, section: proposedDestinationIndexPath.section)
+            }
         }
+        
         return proposedDestinationIndexPath
     }
     
@@ -129,8 +174,25 @@ extension LocationVC: UITableViewDelegate, UITableViewDataSource {
         if editingStyle == .delete {
             tableView.beginUpdates()
             usersInfo.deleteLocation(at: indexPath.row)
+            usersInfo.forecastWeatherPages.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
             tableView.endUpdates()
+            
+            if usersInfo.isLocationEnabled() {
+                
+                if usersInfo.returnUsersLocationsCount() == 1 {
+                    editButton.tintColor = .white
+                    locationTable.isEditing = false
+                }
+            }
+            
+            if !usersInfo.isLocationEnabled() {
+                if usersInfo.returnUsersLocationsCount() == 0 {
+                    editButton.tintColor = .white
+                    locationTable.isEditing = false
+                }
+            }
+            // these will check if theres nothing in the edit section
         }
     }
 

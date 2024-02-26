@@ -24,7 +24,6 @@
 		D37339862AC4CBD100FC8D4E /* TopicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37339852AC4CBD100FC8D4E /* TopicView.swift */; };
 		D37D5D0A2ACA679C00CE3187 /* LocationVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37D5D092ACA679C00CE3187 /* LocationVC.swift */; };
 		D3900D542AE76E8000B6B6D2 /* EnableLocationVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3900D532AE76E8000B6B6D2 /* EnableLocationVC.swift */; };
-		D3FF20862AF0BA0B00C84A88 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3FF20852AF0BA0B00C84A88 /* LocationService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,7 +46,6 @@
 		D37339852AC4CBD100FC8D4E /* TopicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicView.swift; sourceTree = "<group>"; };
 		D37D5D092ACA679C00CE3187 /* LocationVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationVC.swift; sourceTree = "<group>"; };
 		D3900D532AE76E8000B6B6D2 /* EnableLocationVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnableLocationVC.swift; sourceTree = "<group>"; };
-		D3FF20852AF0BA0B00C84A88 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,7 +86,6 @@
 				D3558AD82ACF9E6F004C0A66 /* SearchVC.swift */,
 				D343FD752AD365E800A166F5 /* SingularWeatherPageVC.swift */,
 				D328D1CC2ADCB82300397A4F /* UsersLocationsClassFile.swift */,
-				D3FF20852AF0BA0B00C84A88 /* LocationService.swift */,
 				D3900D532AE76E8000B6B6D2 /* EnableLocationVC.swift */,
 				D343FD722AD35F4400A166F5 /* Weather API Folder */,
 				D37339852AC4CBD100FC8D4E /* TopicView.swift */,
@@ -191,7 +188,6 @@
 				D37339862AC4CBD100FC8D4E /* TopicView.swift in Sources */,
 				D37D5D0A2ACA679C00CE3187 /* LocationVC.swift in Sources */,
 				D343FD762AD365E800A166F5 /* SingularWeatherPageVC.swift in Sources */,
-				D3FF20862AF0BA0B00C84A88 /* LocationService.swift in Sources */,
 				D3900D542AE76E8000B6B6D2 /* EnableLocationVC.swift in Sources */,
 				D343FD782AD39CBC00A166F5 /* ForecastStructURLSession.swift in Sources */,
 				D328D1CD2ADCB82300397A4F /* UsersLocationsClassFile.swift in Sources */,
@@ -367,7 +363,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 3R45N6NL9P;
+				DEVELOPMENT_TEAM = V5YR3KNBNF;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WeatherWise/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

@@ -7,9 +7,14 @@
 
 import UIKit
 
-class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+class SceneDelegate: UIResponder, UIWindowSceneDelegate, UINavigationControllerDelegate {
 
     var window: UIWindow?
+    
+    func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
+        let hide = viewController is MainVC
+            navigationController.setNavigationBarHidden(hide, animated: animated)
+    }
 
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
@@ -21,12 +26,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(frame: windowScene.coordinateSpace.bounds)
         window?.windowScene = windowScene
         
-        if usersInfo.isFirstTimeBootingApp() {
-            window?.rootViewController = MainVC()
-        }
-        else {
-            window?.rootViewController = MainVC()
-        }
+        let nav = UINavigationController(rootViewController: MainVC())
+        nav.delegate = self
+        nav.navigationBar.prefersLargeTitles = true
+        window?.rootViewController = nav
         
         
         window?.makeKeyAndVisible()
@@ -52,6 +55,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
+        
+        
+        
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {

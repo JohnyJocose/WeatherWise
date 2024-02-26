@@ -14,17 +14,17 @@ public class UsersWeatherLocations: NSObject {
     
     let locationManager = CLLocationManager()
     
+    var delegate: MainVC!
+    
+    var locationDelegate: LocationVC!
     
     
-    
-    
+    // We're using a timer to update the weather views every 15 min.
+    var timer: Timer!
     
 
     var locationsForecastArray: [ForecastStruct] = []
     var forecastWeatherPages: [WeatherView] = [WeatherView()]
-    
-    //var noLocationEnabledArray: [ForecastStruct] = []
-    //var yesLocationEnabledArray: [ForecastStruct] = []
     
     var hourlyForecastData: [[HourResult]] = []
     var threeDayForecastData: [[ForecastDayResult]] = []
@@ -32,34 +32,193 @@ public class UsersWeatherLocations: NSObject {
     
     
     
-    var usersLocation: ForecastStruct?
+    
+    
     var locationEnabled: Bool?
     
+    var skipToLocation: Bool?
     
-    init(locationEnabled: Bool?) {
-        self.locationEnabled = locationEnabled
-        configureUsersData()
+    
+    
+    override init() {
+        super.init()
+        configureLocationManager()
+        startUpdateTimer()
         
         
     }
     
-    func configureUsersData() {
-        // If nil then it's the first time booting and we need account for that
-        if locationEnabled == nil {
+    func startUpdateTimer() {
+        
+        // update the weather in 15 min increments
+        timer = Timer.scheduledTimer(withTimeInterval: 900, repeats: true, block: { [self] timer in
+            
+            Task {
+                if delegate != nil || locationDelegate != nil{
+                    
+                    if let delegate {
+                        await delegate.startLoading()
+                        await delegate.disableEverything()
+                    }
+
+                    hourlyForecastData.removeAll()
+                    threeDayForecastData.removeAll()
+                    
+                    for i in 0..<locationsForecastArray.count {
+                        if locationEnabled == true && i == 0 {
+                            updateWeatherInfo(forecast: locationsForecastArray[i], index: i, usersLocation: true)
+                        }
+                        else {
+                            updateWeatherInfo(forecast: locationsForecastArray[i], index: i)
+                        }
+                    }
+                    
+                    if delegate != nil || locationDelegate != nil{
+                        
+                        hourlyForecastData.removeAll()
+                        threeDayForecastData.removeAll()
+                        
+                        for i in 0..<locationsForecastArray.count {
+                            if locationEnabled == true && i == 0 {
+                                updateWeatherInfo(forecast: locationsForecastArray[i], index: i, usersLocation: true)
+                            }
+                            else {
+                                updateWeatherInfo(forecast: locationsForecastArray[i], index: i)
+                            }
+                        }
+                        
+                        if locationDelegate != nil {
+                            await locationDelegate.mainDelegate.updateScrollView()
+                            await locationDelegate.mainDelegate.stopLoading()
+                            await locationDelegate.mainDelegate.enableEverything()
+                            
+                        }
+                        else {
+                            await delegate.updateScrollView()
+                            await delegate.stopLoading()
+                            await delegate.enableEverything()
+                            
+                        }
+                    }
+                }
+            }
+            
+            
+        })
+    }
+    
+    func updateWeatherInfo(forecast: ForecastStruct, index: Int, usersLocation: Bool = false) {
+        
+        
+        Task {
+            var result = try await forecastJson.getForecastDataAsync(lat: forecast.location.lat, lon: forecast.location.lon)
+            
+            // When searching locations by latitude and longitude, sometimes the API returns the city as a whole instead of the specific area we need.
+            // I will adjust the struct to ensure the correct location is saved in Core Data.
+            
+            if !usersLocation {
+                result.location.name = forecast.location.name
+                result.location.region = forecast.location.region
+                result.location.country = forecast.location.country
+            }
+            
+            locationsForecastArray[index] = result
+        }
+        
+    }
+    
+    func configureLocationManager() {
+        locationManager.desiredAccuracy = kCLLocationAccuracyReduced
+        locationManager.delegate = self
+        requestPermissionToAccessLocation()
+    }
+    
+    func requestPermissionToAccessLocation() {
+        switch locationManager.authorizationStatus {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .restricted:
+            locationManager.requestWhenInUseAuthorization()
+        case .denied:
+            commenceLocationDenied()
+            locationEnabled = false
+        case .authorizedAlways:
+            skipToLocation = false
+            locationManager.startUpdatingLocation()
+        case .authorizedWhenInUse:
+            skipToLocation = false
+            locationManager.startUpdatingLocation()
+        @unknown default:
+            commenceLocationDenied()
+            locationEnabled = false
+        }
+    }
+    
+    func commenceLocationEnabled() {
+        if locationEnabled == nil || locationEnabled == false {
             
         }
-        else if locationEnabled == true {
-            
+    }
+    
+    
+    func commenceLocationDenied() {
+        
+        if locationEnabled == true {
+            locationsForecastArray.remove(at: 0)
+            forecastWeatherPages.remove(at: 0)
         }
-        else if locationEnabled == false {
+        locationEnabled = false
+        if !isUsersLocationsEmpty() {
+            if let delegate {
+                delegate.updateScrollView()
+                
+                delegate.changeNumberOfPagesInPageControl(arrayCount: locationsForecastArray.count, currentPage: 0)
+                delegate.changeScrollViewBasedOnArray(index: delegate.oldPageTracker)
+                
+                delegate.changeFirstPageIndicatorImage(LocationOn: false)
+                
+                
+                
+                
+            }
+        }
+        
+        if isUsersLocationsEmpty() {
+            if forecastWeatherPages.isEmpty {
+                forecastWeatherPages.append(WeatherView())
+            }
+            if let delegate {
+                delegate.updateScrollView()
+                delegate.changeNumberOfPagesInPageControl(arrayCount: forecastWeatherPages.count, currentPage: 0)
+                delegate.changeFirstPageIndicatorImage(LocationOn: false)
+            }
             
+            skipToLocation = true
+        }
+        
+        if let locationDelegate {
+            locationDelegate.locationTable.reloadData()
+            if returnUsersLocationsCount() == 0 {
+                locationDelegate.changeTableEditing(status: false)
+            }
         }
         
         
     }
     
+
+
     
     
+    
+    
+    
+    func addWeatherPage() {
+        forecastWeatherPages.append(WeatherView())
+        if let delegate {
+            delegate.updateScrollView()
+        }
+    }
     
     
     
@@ -68,6 +227,8 @@ public class UsersWeatherLocations: NSObject {
     
     func addLocation(location: ForecastStruct) {
         locationsForecastArray.append(location)
+        skipToLocation = false
+        
     }
     
     func deleteLocation(at index: Int) {
@@ -90,43 +251,17 @@ public class UsersWeatherLocations: NSObject {
         return locationsForecastArray.isEmpty
     }
     
-    func isLocationEnabled() -> Bool? {
-        guard let locationEnabled else {return nil}
+    func isLocationEnabled() -> Bool {
+        guard let locationEnabled else {return false}
         if locationEnabled{
             return true
         }
         return false
     }
     
-    func isFirstTimeBootingApp() -> Bool {
-        if locationEnabled == nil {
-            return true
-        }
-        return false
-    }
-
-    
-//    func addUsersLocationAsFirstArray(lat: Decimal, lon: Decimal){
-//        Task {
-//            var result = try await forecastJson.getForecastDataAsync(lat: lat, lon: lon)
-//            locationsForecastArray.insert(result, at: 0)
-//            print(locationsForecastArray)
-//        }
-//        
-//        
-//        
-//    }
-    
-    
-    func returnLocationNameForMainVC(at index: Int) -> String {
-        if index == 0 {
-            return "My Location\n\(locationsForecastArray[index].location.name), \(locationsForecastArray[index].location.region)"
-        }
-        return "\(locationsForecastArray[index].location.name), \(locationsForecastArray[index].location.region)"
-    }
     
     func returnLocationNameForLocationVC(at index: Int) -> String {
-        if index == 0 {
+        if index == 0 && locationEnabled == true {
             return "My Location - \(locationsForecastArray[index].location.name), \(locationsForecastArray[index].location.region)"
         }
         return "\(locationsForecastArray[index].location.name), \(locationsForecastArray[index].location.region)"
@@ -136,8 +271,18 @@ public class UsersWeatherLocations: NSObject {
     
     // MARK: CoreData/API Functions
     func updateAllWeatherViews() {
+        
+        hourlyForecastData.removeAll()
+        threeDayForecastData.removeAll()
+        
         for i in 0..<usersInfo.returnUsersLocationsCount(){
+            
+            
+            hourlyForecastData.append([])
+            threeDayForecastData.append([])
+            
             updateWeatherViewInfo(weatherView: forecastWeatherPages[i], forecastInfo: usersInfo.locationsForecastArray[i], index: i)
+            
         }
     }
     
@@ -165,7 +310,14 @@ public class UsersWeatherLocations: NSObject {
         
         let highLowString = lowString + highString
         
-        weatherView.updateStackLabels(location: "\(forecastInfo.location.name), \(forecastInfo.location.region)", temperature: tempString, weather: forecastInfo.current.condition.text, highLow: highLowString)
+        weatherView.updateTimeZone(timeZoneID: forecastInfo.location.tzId)
+        
+        if locationEnabled == true && index == 0 {
+            weatherView.updateStackLabels(location: "My Location - \(forecastInfo.location.name), \(forecastInfo.location.region)", temperature: tempString, weather: forecastInfo.current.condition.text, highLow: highLowString)
+        }
+        else {
+            weatherView.updateStackLabels(location: "\(forecastInfo.location.name), \(forecastInfo.location.region)", temperature: tempString, weather: forecastInfo.current.condition.text, highLow: highLowString)
+        }
         
         
         
@@ -173,11 +325,14 @@ public class UsersWeatherLocations: NSObject {
         weatherView.updateThreeDayHourData(threeDayForecast: threeDayForecastData[index])
         weatherView.updateHumidty(humidity: forecastInfo.current.humidity)
         weatherView.updateFeelsLike(feelsLike: forecastInfo.current.feelslikeF)
+        weatherView.updateMoonPhase(moonPhase: forecastInfo.forecast.forecastday[0].astro.moonPhase)
         weatherView.updateSunset(sunsetTime: forecastInfo.forecast.forecastday[0].astro.sunset)
 
     }
     
+    // This function adds all the hourly forecast data and at the very end we add the now to it
     func populateHourlyForecastData(forecastInfo: ForecastStruct, index: Int) {
+        
         
         let timeZoneID = forecastInfo.location.tzId
         if let date = convertStringToLocalDate(localTimeString: forecastInfo.location.localtime, timeZoneIdentifier: timeZoneID) {
@@ -188,8 +343,6 @@ public class UsersWeatherLocations: NSObject {
                 for hourForecast in forecastDay.hour {
                     if let hourlyTime = convertStringToLocalDate(localTimeString: hourForecast.time, timeZoneIdentifier: timeZoneID) {
                         if hourlyTime > date && hourIndex < 23 {
-                            //print(hourIndex)
-                            //print()
                             hourlyForecastData[index].append(hourForecast)
                             hourIndex += 1
                         }
@@ -201,7 +354,7 @@ public class UsersWeatherLocations: NSObject {
             }
             
             let nowHourStruct = HourResult(timeEpoch: forecastInfo.location.localtimeEpoch,
-                                           time: forecastInfo.location.tzId,
+                                           time: forecastInfo.location.localtime,
                                            tempC: forecastInfo.current.tempC,
                                            tempF: forecastInfo.current.tempF,
                                            condition: forecastInfo.current.condition,
@@ -264,21 +417,6 @@ public class UsersWeatherLocations: NSObject {
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     // MARK: Debug functions
     
     func debugPrintLocationArray() {
@@ -297,13 +435,98 @@ public class UsersWeatherLocations: NSObject {
     
 }
 
-public let usersInfo = UsersWeatherLocations(locationEnabled: nil)
+public let usersInfo = UsersWeatherLocations()
 
 
 // MARK: Location Manager
 extension UsersWeatherLocations: CLLocationManagerDelegate {
     
+    public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        switch manager.authorizationStatus {
+
+        case .authorizedAlways:
+            skipToLocation = false
+            manager.startUpdatingLocation()
+        case .authorizedWhenInUse:
+            skipToLocation = false
+            manager.startUpdatingLocation()
+        default:
+            print("Location Denied")
+            commenceLocationDenied()
+            locationEnabled = false
+            
+        }
+    }
     
+    public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.last {
+            
+            manager.stopUpdatingLocation()
+            createUsersLocationStruct(lat: Decimal(location.coordinate.latitude), lon: Decimal(location.coordinate.longitude))
+        }
+    }
+    
+    func createUsersLocationStruct(lat: Decimal, lon: Decimal) {
+        Task {
+            let result = try await forecastJson.getForecastDataAsync(lat: lat, lon: lon)
+            //print(result.printReadableForecast())
+            
+            if locationEnabled == nil || locationEnabled == false {
+                
+                if locationEnabled == false {
+                    await forecastWeatherPages.insert(WeatherView(), at: 0)
+                    if !isUsersLocationsEmpty(){
+                        if let delegate {
+                            await delegate.updateScrollView()
+                            
+                            await delegate.changeNumberOfPagesInPageControl(arrayCount: forecastWeatherPages.count, currentPage: 0)
+                            await delegate.changeScrollViewBasedOnArray(index: delegate.oldPageTracker)
+                            await delegate.changeFirstPageIndicatorImage(LocationOn: true)
+                        }
+                    }
+                }
+                locationsForecastArray.insert(result, at: 0)
+                if locationEnabled == nil {
+                    await delegate.updateScrollView()
+                }
+                locationEnabled = true
+                
+                
+                
+                if let locationDelegate {
+                    await locationDelegate.locationTable.reloadData()
+                    if returnUsersLocationsCount() == 1 {
+                        await locationDelegate.changeTableEditing(status: false)
+                    }
+                    if let mainDelegate = await locationDelegate.mainDelegate {
+                        if forecastWeatherPages.count != locationsForecastArray.count {
+                            usersInfo.forecastWeatherPages.removeLast()
+                        }
+                        await mainDelegate.updateScrollView()
+                    }
+                }
+                
+            }
+            else {
+                locationsForecastArray.remove(at: 0)
+                locationsForecastArray.insert(result, at: 0)
+                
+                if let locationDelegate {
+                    await locationDelegate.locationTable.reloadData()
+                    
+                }
+                // update the current string of the location list in location vc
+            }
+            
+            
+            
+            DispatchQueue.main.async {
+                
+                self.updateAllWeatherViews()
+            }
+            
+        }
+    }
     
 }
 

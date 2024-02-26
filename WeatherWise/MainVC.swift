@@ -7,51 +7,147 @@
 
 import UIKit
 
-
 // This file will be the home screen where the weather is displayed for the user's current location and any other locations they choose to add
+
 
 class MainVC: UIViewController {
     
     
     let backgroundImage = UIImageView()
     
-    // Data
-//    var locationList = usersInfo.locationsForecastArray
-//    var hourlyForecastData: [[HourResult]] = []
-//    var threeDayForecastData: [[ForecastDayResult]] = []
-    
-    
+        
     var scrollViewsList: [UIScrollView] = []
-    //var weatherViewsList: [WeatherView] = []
     
     
     let pageScrollView = UIScrollView()
     let toolBar = UIToolbar()
     let weatherPageControl = UIPageControl()
     var oldPageTracker: Int = 0
+    
+    // Syntax to create a UIActivityIndicatorView
+    var loadCircle = UIActivityIndicatorView()
+    
 
     
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        usersInfo.delegate = self
+        
+        
+        // Set scroll view delegate to self to access functions for it
+        pageScrollView.delegate = self
     }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        NotificationCenter.default.removeObserver(self, name:  UIApplication.didBecomeActiveNotification, object: nil)
+    }
+    
+    
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.openActivity), name: UIApplication.didBecomeActiveNotification, object: nil)
+
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if usersInfo.skipToLocation == true {
+            goToLocationVC()
+        }
+    }
+    
+    @objc func openActivity() {
+        if usersInfo.skipToLocation == true {
+            goToLocationVC()
+        }
+    }
+    
+    
     
     func configureUI() {
         setBackgroundColor()
-        print("the weatherpages count is \(usersInfo.forecastWeatherPages.count)")
-        configureScrollView(locations: usersInfo.forecastWeatherPages.count)
         configureToolBar()
+        configureScrollView(locations: usersInfo.forecastWeatherPages.count)
         makeAndConfigureWeatherViews(locations: usersInfo.forecastWeatherPages.count)
         
-//        if usersInfo.isFirstTimeBootingApp() {
-//            
-//            LocationService.shared.getUsersLocation { [weak self] location in
-//                guard let strongSelf = self else {return}
-//                usersInfo.addUsersLocationAsFirstArray(lat: Decimal(location.coordinate.latitude), lon: Decimal(location.coordinate.longitude))
-//                
-//            }
-//
-//        }
+        configureLoadingCircle()
+
+    }
+    
+    func disableEverything() {
+        // Since we have an activity bar, we don't want users to be able to click anywhere on the screen. This could lead the user to accidentally click on something and navigate to a different screen, possibly causing a crash, etc. This piece of code prevents user interaction.
+        view.isUserInteractionEnabled = false
+
+    }
+    
+    func enableEverything() {
+        // This piece of code enables user interaction again.
+        view.isUserInteractionEnabled = true
+    }
+    
+    
+    func startLoading() {
+        // This is how you start the activity indicator.
+        loadCircle.startAnimating()
+    }
+    
+    func stopLoading() {
+        // This is how you stop the activity indicator.
+        loadCircle.stopAnimating()
+    }
+    
+    
+    
+    func configureLoadingCircle(){
+        // This will determine if the activity indicator is visible when UIActivityIndicatorView'sName.stopAnimating() is called.
+        loadCircle.hidesWhenStopped = true
+        loadCircle.color = .white
+        loadCircle.style = .large
+        // The activity indicator itself is not very big and by default, it will appear in the middle. Depending on the constraints you set, the rest of it will have a background that you can change the color of. I prefer to have it dark to indicate that something is in progress and to suggest that you shouldn't click anywhere else.
+        loadCircle.backgroundColor = .darkGray
+        
+        loadCircle.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Set the activity bar with the constraints you want.
+        view.addSubview(loadCircle)
+        NSLayoutConstraint.activate([
+            loadCircle.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            loadCircle.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            loadCircle.topAnchor.constraint(equalTo: view.topAnchor),
+            loadCircle.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            loadCircle.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadCircle.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    func removePageScrollView() {
+        // perform a loop to iterate each subView
+        pageScrollView.subviews.forEach { subView in
+           // removing subView from its parent view
+            subView.removeFromSuperview()
+        }
+        pageScrollView.removeFromSuperview()
+        scrollViewsList.removeAll()
+    }
+    
+    // MARK: UPDATE SCROLLVIEW FUNCTION
+    func updateScrollView() {
+        removePageScrollView()
+        configureScrollView(locations: usersInfo.forecastWeatherPages.count)
+        makeAndConfigureWeatherViews(locations: usersInfo.forecastWeatherPages.count)
     }
     
     // MARK: UI Functions
@@ -68,6 +164,7 @@ class MainVC: UIViewController {
         ])
     }
     
+    
     func configureScrollView(locations: Int) {
         
         
@@ -77,13 +174,8 @@ class MainVC: UIViewController {
         pageScrollView.bounces = false
         pageScrollView.isPagingEnabled = true
         pageScrollView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(pageScrollView)
-        
-//        // Calculate the height of the top safe area
-//        let topSafeAreaHeight = view.safeAreaInsets.top
-//
-//        // Set the content offset to move the content down to the top safe area
-//        pageScrollView.contentOffset = CGPoint(x: 0, y: -topSafeAreaHeight)
+        view.insertSubview(pageScrollView, belowSubview: toolBar)
+        //view.addSubview(pageScrollView)
         
         NSLayoutConstraint.activate([
             pageScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -91,6 +183,8 @@ class MainVC: UIViewController {
             pageScrollView.topAnchor.constraint(equalTo: view.topAnchor),
             pageScrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+        
+        
     }
     
     func configureToolBar() {
@@ -116,13 +210,19 @@ class MainVC: UIViewController {
         ])
     }
     
+    
     func configureWeatherPageControl(locations: Int) {
         
         weatherPageControl.numberOfPages = locations
         weatherPageControl.currentPage = 0
         oldPageTracker = weatherPageControl.currentPage
-        weatherPageControl.hidesForSinglePage = false
+        weatherPageControl.hidesForSinglePage = true
         weatherPageControl.addTarget(self, action: #selector(pageControlChanged(_:)), for: .valueChanged)
+        
+        let config = UIImage.SymbolConfiguration(font: .systemFont(ofSize: 10))
+        
+        weatherPageControl.preferredIndicatorImage = UIImage(systemName: "circle.fill")?.applyingSymbolConfiguration(config)
+        
         
         weatherPageControl.setIndicatorImage(UIImage(systemName: "location.fill"), forPage: 0)
         weatherPageControl.translatesAutoresizingMaskIntoConstraints = false
@@ -130,20 +230,42 @@ class MainVC: UIViewController {
         
     }
     
+    func changeFirstPageIndicatorImage(LocationOn: Bool) {
+        if LocationOn {
+            weatherPageControl.setIndicatorImage(UIImage(systemName: "location.fill"), forPage: 0)
+        }
+        else {
+            
+            let config = UIImage.SymbolConfiguration(font: .systemFont(ofSize: 10))
+            weatherPageControl.setIndicatorImage(UIImage(systemName: "circle.fill")?.applyingSymbolConfiguration(config), forPage: 0)
+        }
+    }
+    
+    func changeNumberOfPagesInPageControl(arrayCount: Int, currentPage: Int) {
+        weatherPageControl.numberOfPages = arrayCount
+        weatherPageControl.currentPage = currentPage
+        oldPageTracker = weatherPageControl.currentPage
+        
+    }
+    
     // Move the scroll view to the position corresponding to the selected page.
     
-    // TODO: change Backgorund function matchBackgroundToLocation() to be able to use location struct; get similar code from SingularWeatherPageVC
-    @objc func pageControlChanged(_ sender:UIPageControl) {
-        let currentPage = sender.currentPage
-        pageScrollView.setContentOffset(.init(x: CGFloat(currentPage) * view.frame.width, y: 0), animated: false)
-        let currentTime = usersInfo.locationsForecastArray[currentPage].location.localtime
-        let sunsetTime = usersInfo.locationsForecastArray[currentPage].forecast.forecastday[0].astro.sunset
-        let sunriseTime = usersInfo.locationsForecastArray[currentPage].forecast.forecastday[0].astro.sunrise
+    func changeScrollViewBasedOnArray(index: Int) {
+        pageScrollView.setContentOffset(.init(x: CGFloat(index) * view.frame.width, y: 0), animated: false)
+        let currentTime = usersInfo.locationsForecastArray[index].location.localtime
+        let sunsetTime = usersInfo.locationsForecastArray[index].forecast.forecastday[0].astro.sunset
+        let sunriseTime = usersInfo.locationsForecastArray[index].forecast.forecastday[0].astro.sunrise
         
         changeBackgroundBasedOnLocationsTime(currentTime: currentTime, sunset: sunsetTime, sunrise: sunriseTime)
     }
     
+    @objc func pageControlChanged(_ sender:UIPageControl) {
+        let currentPage = sender.currentPage
+        changeScrollViewBasedOnArray(index: currentPage)
+    }
+    
     func changeBackgroundBasedOnLocationsTime(currentTime: String, sunset: String, sunrise: String) {
+        
         let sunriseSunsetFormat = "hh:mm a"
         let currentDateFormat = "yyyy-MM-dd H:mm"
         
@@ -253,6 +375,7 @@ class MainVC: UIViewController {
         }
         setWeatherViews(scrolls: scrollViewsList)
         if !usersInfo.isUsersLocationsEmpty() {
+
             usersInfo.updateAllWeatherViews()
             
             let currentTime = usersInfo.locationsForecastArray[weatherPageControl.currentPage].location.localtime
@@ -323,139 +446,22 @@ class MainVC: UIViewController {
                 // The height is not set because it will be determined when all the UI elements for the `weatherview` are placed. The `contentsize` will dynamically adjust to fit the `weatherview`'s height.
             ])
             
-//            weatherViewsList.append(weatherView)
-//            hourlyForecastData.append([])
-//            threeDayForecastData.append([])
-            
             
         }
-        
-        // Set scroll view delegate to self to access functions for it
-        pageScrollView.delegate = self
 
     }
     
-    
-    
-//    // MARK: CoreData/API Functions
-//    func updateAllWeatherViews() {
-//        for i in 0..<usersInfo.returnUsersLocationsCount(){
-//            updateWeatherViewInfo(weatherView: weatherViewsList[i], forecastInfo: usersInfo.locationsForecastArray[i], index: i)
-//        }
-//    }
-//    
-//    func updateWeatherViewInfo(weatherView: WeatherView, forecastInfo: ForecastStruct, index: Int) {
-//        
-//        populateHourlyForecastData(forecastInfo: forecastInfo, index: index)
-//        
-//        populateThreeDayForecastData(forecastInfo: forecastInfo, index: index)
-//        
-//        
-//        var tempDecimal: Decimal = forecastInfo.current.tempF
-//        var tempDrounded: Decimal = Decimal()
-//        NSDecimalRound(&tempDrounded, &tempDecimal, 0, .plain)
-//        let tempString = "\(tempDrounded)°"
-//        
-//        var lowDecimal: Decimal = forecastInfo.forecast.forecastday[0].day.mintempF
-//        var lowDrounded: Decimal = Decimal()
-//        NSDecimalRound(&lowDrounded, &lowDecimal, 0, .plain)
-//        let lowString = "L:\(lowDrounded)°  "
-//        
-//        var highDecimal: Decimal = forecastInfo.forecast.forecastday[0].day.maxtempF
-//        var highDrounded: Decimal = Decimal()
-//        NSDecimalRound(&highDrounded, &highDecimal, 0, .plain)
-//        let highString = "H:\(highDrounded)°"
-//        
-//        let highLowString = lowString + highString
-//        
-//        weatherView.updateStackLabels(location: "\(forecastInfo.location.name), \(forecastInfo.location.region)", temperature: tempString, weather: forecastInfo.current.condition.text, highLow: highLowString)
-//        
-//        
-//        
-//        weatherView.updateHourData(hourForecast: hourlyForecastData[index])
-//        weatherView.updateThreeDayHourData(threeDayForecast: threeDayForecastData[index])
-//        weatherView.updateHumidty(humidity: forecastInfo.current.humidity)
-//        weatherView.updateFeelsLike(feelsLike: forecastInfo.current.feelslikeF)
-//        weatherView.updateSunset(sunsetTime: forecastInfo.forecast.forecastday[0].astro.sunset)
-//        
-//        changeBackgroundBasedOnLocationsTime(currentTime: forecastInfo.location.localtime, sunset: forecastInfo.forecast.forecastday[0].astro.sunset, sunrise: forecastInfo.forecast.forecastday[0].astro.sunrise)
-//
-//    }
-//    
-//    func populateHourlyForecastData(forecastInfo: ForecastStruct, index: Int) {
-//        
-//        let timeZoneID = forecastInfo.location.tzId
-//        if let date = convertStringToLocalDate(localTimeString: forecastInfo.location.localtime, timeZoneIdentifier: timeZoneID) {
-//            var hourIndex: Int = 0
-//            
-//            var previousHourlyTimeStruct: HourResult! = nil
-//            for forecastDay in forecastInfo.forecast.forecastday {
-//                for hourForecast in forecastDay.hour {
-//                    if let hourlyTime = convertStringToLocalDate(localTimeString: hourForecast.time, timeZoneIdentifier: timeZoneID) {
-//                        if hourlyTime > date && hourIndex < 23 {
-//                            //print(hourIndex)
-//                            //print()
-//                            hourlyForecastData[index].append(hourForecast)
-//                            hourIndex += 1
-//                        }
-//                        else if hourIndex < 23 {
-//                            previousHourlyTimeStruct = hourForecast
-//                        }
-//                    }
-//                }
-//            }
-//            
-//            let nowHourStruct = HourResult(timeEpoch: forecastInfo.location.localtimeEpoch,
-//                                           time: forecastInfo.location.tzId,
-//                                           tempC: forecastInfo.current.tempC,
-//                                           tempF: forecastInfo.current.tempF,
-//                                           condition: forecastInfo.current.condition,
-//                                           windMph: forecastInfo.current.windMph,
-//                                           windKph: forecastInfo.current.windKph,
-//                                           windDegree: forecastInfo.current.windDegree,
-//                                           windDir: forecastInfo.current.windDir,
-//                                           pressureMb: forecastInfo.current.pressureMb,
-//                                           pressureIn: forecastInfo.current.pressureIn,
-//                                           precipMm: forecastInfo.current.precipMm,
-//                                           precipIn: forecastInfo.current.precipIn,
-//                                           humidity: forecastInfo.current.humidity,
-//                                           cloud: forecastInfo.current.cloud,
-//                                           feelslikeC: forecastInfo.current.feelslikeC,
-//                                           feelslikeF: forecastInfo.current.feelslikeF,
-//                                           windchillC: previousHourlyTimeStruct.windchillC,
-//                                           windchillF: previousHourlyTimeStruct.windchillF,
-//                                           heatindexC: previousHourlyTimeStruct.heatindexC,
-//                                           heatindexF: previousHourlyTimeStruct.heatindexF,
-//                                           dewpointC: previousHourlyTimeStruct.dewpointC,
-//                                           dewpointF: previousHourlyTimeStruct.dewpointF,
-//                                           willItRain: previousHourlyTimeStruct.willItRain,
-//                                           willItSnow: previousHourlyTimeStruct.willItSnow,
-//                                           isDay: forecastInfo.current.isDay,
-//                                           visKm: previousHourlyTimeStruct.visKm,
-//                                           visMiles: previousHourlyTimeStruct.visMiles,
-//                                           chanceOfRain: previousHourlyTimeStruct.chanceOfRain,
-//                                           chanceOfSnow: previousHourlyTimeStruct.chanceOfSnow,
-//                                           gustMph: forecastInfo.current.gustMph,
-//                                           gustKph: forecastInfo.current.gustKph,
-//                                           uv: forecastInfo.current.uv)
-//            
-//            hourlyForecastData[index].insert(nowHourStruct, at: 0)
-//            
-//        }
-//    }
-//    
-//    func populateThreeDayForecastData(forecastInfo: ForecastStruct, index: Int) {
-//        for dayForecast in forecastInfo.forecast.forecastday {
-//            threeDayForecastData[index].append(dayForecast)
-//        }
-//    }
+    func goToLocationVC() {
+        let nextVC = LocationVC()
+        nextVC.mainDelegate = self
+        
+        navigationController?.pushViewController(nextVC, animated: true)
+    }
+ 
     
     @objc func buttonPressed(_ sender: UIButton) {
-        let nextVC = UINavigationController(rootViewController: LocationVC())
-        nextVC.navigationBar.prefersLargeTitles = true
-        
-        nextVC.modalPresentationStyle = .fullScreen
-        present(nextVC, animated: true)
+        goToLocationVC()
+
     }
     
     
@@ -468,11 +474,15 @@ class MainVC: UIViewController {
 
 extension MainVC: UIScrollViewDelegate {
     
-    //func isDifferentPage()
+    
     // This function is called every time we scroll in the scroll view. Here, we update the page control to match where we are in the scroll view.
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         
         // have to use self because i want to reference the scrollview variabel i made above and since they share a name not having self would reference all scrollviews instead
+        
+        guard !(round(Float((self.pageScrollView.contentOffset.x)) / Float(self.pageScrollView.frame.width)).isNaN || round(Float((self.pageScrollView.contentOffset.x)) / Float(self.pageScrollView.frame.width)).isInfinite) else { return }
+
+        
         weatherPageControl.currentPage = Int(round(Float((self.pageScrollView.contentOffset.x)) / Float(self.pageScrollView.frame.width)))
         if oldPageTracker != weatherPageControl.currentPage {
             oldPageTracker = weatherPageControl.currentPage

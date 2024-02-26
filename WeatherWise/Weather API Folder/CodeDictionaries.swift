@@ -172,3 +172,14 @@ public var moonDict: [String: UIImage] = [
     "Last Quarter": UIImage(systemName:"moonphase.last.quarter.inverse")!,
     "Waning Crescent": UIImage(systemName:"moonphase.waning.crescent.inverse")!
 ]
+
+//public var moonDict: [String: UIImage] = [
+//    "New Moon": UIImage(systemName:"moonphase.new.moon")!,
+//    "Waxing Crescent": UIImage(systemName:"moonphase.waxing.crescent")!,
+//    "First Quarter": UIImage(systemName:"moonphase.first.quarter")!,
+//    "Waxing Gibbous": UIImage(systemName:"moonphase.waxing.gibbous")!,
+//    "Full Moon": UIImage(systemName:"moonphase.full.moon")!,
+//    "Waning Gibbous": UIImage(systemName:"moonphase.waning.gibbous")!,
+//    "Last Quarter": UIImage(systemName:"moonphase.last.quarter")!,
+//    "Waning Crescent": UIImage(systemName:"moonphase.waning.crescent")!
+//]
