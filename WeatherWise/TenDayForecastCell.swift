@@ -26,12 +26,10 @@ class TenDayForecastCell: UITableViewCell {
     func setTenLabelsAndPicture(day: String, highLow: String, icon: UIImage) {
         dayLabel.text = day
         highLowLabel.text = highLow
-        //highLowLabel.text = "L:\(low)° H:\(high)°"
         weatherIcon.image = icon
     }
     
     func configureUI() {
-//        configureCellView()
         configureWeatherIcon()
         configureDayLabel()
         configureHighLowLabel()

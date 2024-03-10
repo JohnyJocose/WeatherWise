@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22757" systemVersion="23B92" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+    <entity name="Astro" representedClassName="Astro" syncable="YES">
+        <attribute name="moonIllumination" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="moonPhase" optional="YES" attributeType="String"/>
+        <attribute name="moonrise" optional="YES" attributeType="String"/>
+        <attribute name="moonset" optional="YES" attributeType="String"/>
+        <attribute name="sunrise" optional="YES" attributeType="String"/>
+        <attribute name="sunset" optional="YES" attributeType="String"/>
+        <relationship name="forecastDay" maxCount="1" deletionRule="Nullify" destinationEntity="ForecastDay" inverseName="astro" inverseEntity="ForecastDay"/>
+    </entity>
+    <entity name="Condition" representedClassName="Condition" syncable="YES">
+        <attribute name="code" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="icon" optional="YES" attributeType="String"/>
+        <attribute name="text" optional="YES" attributeType="String"/>
+        <relationship name="current" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Current" inverseName="condition" inverseEntity="Current"/>
+        <relationship name="day" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Day" inverseName="condition" inverseEntity="Day"/>
+        <relationship name="hour" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Hour" inverseName="condition" inverseEntity="Hour"/>
+    </entity>
+    <entity name="Current" representedClassName="Current" syncable="YES">
+        <attribute name="cloud" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="feelslikeC" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="feelslikeF" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="gustKph" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="gustMph" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="humidity" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="isDay" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastUpdated" optional="YES" attributeType="String"/>
+        <attribute name="lastUpdatedEpoch" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="precipIn" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="precipMm" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="pressureIn" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="pressureMb" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="tempC" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="tempF" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="uv" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="windDegree" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="windDir" optional="YES" attributeType="String"/>
+        <attribute name="windKph" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="windMph" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <relationship name="condition" maxCount="1" deletionRule="Nullify" destinationEntity="Condition" inverseName="current" inverseEntity="Condition"/>
+        <relationship name="forecastCore" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ForecastCore" inverseName="current" inverseEntity="ForecastCore"/>
+    </entity>
+    <entity name="Day" representedClassName="Day" syncable="YES">
+        <attribute name="avghumidity" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="avgtempC" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="avgtempF" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="avgvisKm" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="avgvisMiles" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="maxtempC" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="maxtempF" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="maxwindKph" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="maxwindMph" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="mintempC" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="mintempF" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="totalprecipIn" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="totalprecipMm" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="uv" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <relationship name="condition" maxCount="1" deletionRule="Nullify" destinationEntity="Condition" inverseName="day" inverseEntity="Condition"/>
+        <relationship name="forecastDay" maxCount="1" deletionRule="Nullify" destinationEntity="ForecastDay" inverseName="day" inverseEntity="ForecastDay"/>
+    </entity>
+    <entity name="Forecast" representedClassName="Forecast" syncable="YES">
+        <relationship name="forecastCore" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ForecastCore" inverseName="forecast" inverseEntity="ForecastCore"/>
+        <relationship name="forecastDay" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="ForecastDay" inverseName="forecast" inverseEntity="ForecastDay"/>
+    </entity>
+    <entity name="ForecastCore" representedClassName="ForecastCore" syncable="YES">
+        <relationship name="current" maxCount="1" deletionRule="Nullify" destinationEntity="Current" inverseName="forecastCore" inverseEntity="Current"/>
+        <relationship name="forecast" maxCount="1" deletionRule="Nullify" destinationEntity="Forecast" inverseName="forecastCore" inverseEntity="Forecast"/>
+        <relationship name="location" maxCount="1" deletionRule="Nullify" destinationEntity="Location" inverseName="forecastCore" inverseEntity="Location"/>
+    </entity>
+    <entity name="ForecastDay" representedClassName="ForecastDay" syncable="YES">
+        <attribute name="date" optional="YES" attributeType="String"/>
+        <attribute name="dateEpoch" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="astro" maxCount="1" deletionRule="Nullify" destinationEntity="Astro" inverseName="forecastDay" inverseEntity="Astro"/>
+        <relationship name="day" maxCount="1" deletionRule="Nullify" destinationEntity="Day" inverseName="forecastDay" inverseEntity="Day"/>
+        <relationship name="forecast" maxCount="1" deletionRule="Nullify" destinationEntity="Forecast" inverseName="forecastDay" inverseEntity="Forecast"/>
+        <relationship name="hour" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Hour" inverseName="forecastDay" inverseEntity="Hour"/>
+    </entity>
+    <entity name="Hour" representedClassName="Hour" syncable="YES">
+        <attribute name="chanceOfRain" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="chanceOfSnow" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="cloud" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="dewpointC" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="dewpointF" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="feelslikeC" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="feelslikeF" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="gustKph" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="gustMph" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="heatindexC" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="heatindexF" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="humidity" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="isDay" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="precipIn" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="precipMm" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="pressureIn" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="pressureMb" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="tempC" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="tempF" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="time" optional="YES" attributeType="String"/>
+        <attribute name="timeEpoch" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="uv" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="visKm" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="visMiles" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="willItRain" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="willItSnow" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="windchillC" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="windchillF" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="windDegree" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="windDir" optional="YES" attributeType="String"/>
+        <attribute name="windKph" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="windMph" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <relationship name="condition" maxCount="1" deletionRule="Nullify" destinationEntity="Condition" inverseName="hour" inverseEntity="Condition"/>
+        <relationship name="forecastDay" maxCount="1" deletionRule="Nullify" destinationEntity="ForecastDay" inverseName="hour" inverseEntity="ForecastDay"/>
+    </entity>
+    <entity name="Location" representedClassName="Location" syncable="YES">
+        <attribute name="country" optional="YES" attributeType="String"/>
+        <attribute name="lat" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="localtime" optional="YES" attributeType="String"/>
+        <attribute name="localtimeEpoch" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lon" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="region" optional="YES" attributeType="String"/>
+        <attribute name="tzId" optional="YES" attributeType="String"/>
+        <relationship name="forecastCore" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ForecastCore" inverseName="location" inverseEntity="ForecastCore"/>
+    </entity>
+</model>

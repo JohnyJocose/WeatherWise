@@ -49,7 +49,6 @@ class HourlyForecastCell: UICollectionViewCell {
     }
     
     func configureHourLabel() {
-        //hourLabel.text = "12PM"
         hourLabel.font = .systemFont(ofSize: 18)
         hourLabel.textAlignment = .center
         hourLabel.numberOfLines = 1
@@ -66,7 +65,6 @@ class HourlyForecastCell: UICollectionViewCell {
     }
     
     func configureTempLabel() {
-        //tempLabel.text = "92°"
         tempLabel.font = .boldSystemFont(ofSize: 20)
         tempLabel.textAlignment = .center
         tempLabel.numberOfLines = 1

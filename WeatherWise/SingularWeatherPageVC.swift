@@ -99,6 +99,7 @@ class SingularWeatherPageVC: UIViewController {
             usersInfo.addWeatherPage()
             
             usersInfo.addLocation(location: addLocationStruct)
+            usersInfo.addLocationToCoreData(location: addLocationStruct)
             
             if delegate != nil {
                 delegate.delegate.reloadTable()

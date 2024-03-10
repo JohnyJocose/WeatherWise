@@ -8,6 +8,7 @@
 import UIKit
 
 
+
 struct ForecastStruct: Codable {
     var location: LocationResult
     let current: CurrentResult

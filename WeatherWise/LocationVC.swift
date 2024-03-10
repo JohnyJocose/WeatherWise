@@ -6,8 +6,6 @@
 //
 
 
-// lastly once we are done with that its on to... core data
-
 import UIKit
 
 class LocationVC: UIViewController {
@@ -18,7 +16,7 @@ class LocationVC: UIViewController {
     
     var editButton = UIBarButtonItem()
     
-    
+
     
     var mainDelegate: MainVC!
     
@@ -32,8 +30,17 @@ class LocationVC: UIViewController {
         
     }
     
-
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        NotificationCenter.default.removeObserver(self, name:  UIApplication.didBecomeActiveNotification, object: nil)
+    }
     
+    
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+    }
     
     func configureUI () {
         view.backgroundColor = .systemBackground
@@ -65,6 +72,8 @@ class LocationVC: UIViewController {
     
     @objc func buttonPressed(_ sender:UIButton) {
         if locationTable.isEditing {
+            usersInfo.deleteAllCoreData()
+            usersInfo.addAllLocationsToCoreData()
             mainDelegate.updateScrollView()
             sender.tintColor = .white
             locationTable.isEditing = false
@@ -165,12 +174,53 @@ extension LocationVC: UITableViewDelegate, UITableViewDataSource {
         return proposedDestinationIndexPath
     }
     
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let action = UIContextualAction(style: .destructive, title: "Delete") { [self] (action, view, completionHandler) in
+            
+            
+            tableView.beginUpdates()
+            usersInfo.deleteLocation(at: indexPath.row)
+            usersInfo.forecastWeatherPages.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .fade)
+            tableView.endUpdates()
+            
+            
+            
+            if usersInfo.isLocationEnabled() {
+                // These will check if there's nothing in the edit section.
+                if usersInfo.returnUsersLocationsCount() == 1 {
+                    editButton.tintColor = .white
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: { [self] in
+                        locationTable.isEditing = false
+                    })
+                }
+            }
+                
+            if !usersInfo.isLocationEnabled() {
+                // These will check if there's nothing in the edit section.
+                if usersInfo.returnUsersLocationsCount() == 0 {
+                    editButton.tintColor = .white
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: { [self] in
+                        locationTable.isEditing = false
+                    })
+                }
+            }
+            
+            mainDelegate.updateScrollView()
+            usersInfo.deleteAllCoreData()
+            usersInfo.addAllLocationsToCoreData()
+        }
+        
+        return UISwipeActionsConfiguration(actions: [action])
+    }
+    
     func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
         let removedElement = usersInfo.removeLocation(at: sourceIndexPath.row)
         usersInfo.insertRemovedLocation(removedLocation: removedElement, at: destinationIndexPath.row)
     }
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        
         if editingStyle == .delete {
             tableView.beginUpdates()
             usersInfo.deleteLocation(at: indexPath.row)
@@ -181,18 +231,27 @@ extension LocationVC: UITableViewDelegate, UITableViewDataSource {
             if usersInfo.isLocationEnabled() {
                 
                 if usersInfo.returnUsersLocationsCount() == 1 {
+                    // These will check if there's nothing in the edit section.
                     editButton.tintColor = .white
-                    locationTable.isEditing = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: { [self] in
+                        locationTable.isEditing = false
+                    })
                 }
             }
             
             if !usersInfo.isLocationEnabled() {
                 if usersInfo.returnUsersLocationsCount() == 0 {
+                    // These will check if there's nothing in the edit section.
                     editButton.tintColor = .white
-                    locationTable.isEditing = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: { [self] in
+                        locationTable.isEditing = false
+                    })
                 }
             }
-            // these will check if theres nothing in the edit section
+            
+            usersInfo.deleteAllCoreData()
+            usersInfo.addAllLocationsToCoreData()
+            
         }
     }
 

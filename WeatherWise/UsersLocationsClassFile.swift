@@ -8,6 +8,7 @@
 import UIKit
 import CoreLocation
 import Foundation
+import CoreData
 
 public class UsersWeatherLocations: NSObject {
     
@@ -21,6 +22,7 @@ public class UsersWeatherLocations: NSObject {
     
     // We're using a timer to update the weather views every 15 min.
     var timer: Timer!
+    var startTimer: Timer!
     
 
     var locationsForecastArray: [ForecastStruct] = []
@@ -30,7 +32,9 @@ public class UsersWeatherLocations: NSObject {
     var threeDayForecastData: [[ForecastDayResult]] = []
     
     
-    
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        
+    var items: [ForecastCore]?
     
     
     
@@ -42,25 +46,70 @@ public class UsersWeatherLocations: NSObject {
     
     override init() {
         super.init()
+        populateFromCoreData()
         configureLocationManager()
         startUpdateTimer()
         
+    }
+    
+    
+    
+    
+    
+    
+    
+    func populateFromCoreData() {
         
+        do {
+            self.items = try context.fetch(ForecastCore.fetchRequest())
+            if let items = self.items {
+                for item in items {
+                    locationsForecastArray.append(item.createForecastStruct(coreInfo: item))
+                    addWeatherPage()
+                }
+            }
+        }
+        catch {
+            print ("No CoreData exist or Error populating from CoreData")
+        }
+    }
+    
+    
+    func updateCoreWeatherPagesWhenLaunching() {
+        startTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false, block: { [self] timer in
+            
+            if let items {
+                if !items.isEmpty {
+                    if Reachability.isConnectedToNetwork(){
+                        updateWeather()
+                    }
+                }
+            }
+        })
     }
     
     func startUpdateTimer() {
         
+        
         // update the weather in 15 min increments
         timer = Timer.scheduledTimer(withTimeInterval: 900, repeats: true, block: { [self] timer in
-            
-            Task {
+            updateWeather()
+        })
+    }
+    
+    func updateWeather() {
+        Task {
+            if delegate != nil || locationDelegate != nil{
+                deleteAllCoreData()
+                if let delegate {
+                    await delegate.startLoading()
+                    await delegate.disableEverything()
+                }
+
+
                 if delegate != nil || locationDelegate != nil{
                     
-                    if let delegate {
-                        await delegate.startLoading()
-                        await delegate.disableEverything()
-                    }
-
+                    
                     hourlyForecastData.removeAll()
                     threeDayForecastData.removeAll()
                     
@@ -73,38 +122,21 @@ public class UsersWeatherLocations: NSObject {
                         }
                     }
                     
-                    if delegate != nil || locationDelegate != nil{
+                    if locationDelegate != nil {
+                        await locationDelegate.mainDelegate.updateScrollView()
+                        await locationDelegate.mainDelegate.stopLoading()
+                        await locationDelegate.mainDelegate.enableEverything()
                         
-                        hourlyForecastData.removeAll()
-                        threeDayForecastData.removeAll()
+                    }
+                    else {
+                        await delegate.updateScrollView()
+                        await delegate.stopLoading()
+                        await delegate.enableEverything()
                         
-                        for i in 0..<locationsForecastArray.count {
-                            if locationEnabled == true && i == 0 {
-                                updateWeatherInfo(forecast: locationsForecastArray[i], index: i, usersLocation: true)
-                            }
-                            else {
-                                updateWeatherInfo(forecast: locationsForecastArray[i], index: i)
-                            }
-                        }
-                        
-                        if locationDelegate != nil {
-                            await locationDelegate.mainDelegate.updateScrollView()
-                            await locationDelegate.mainDelegate.stopLoading()
-                            await locationDelegate.mainDelegate.enableEverything()
-                            
-                        }
-                        else {
-                            await delegate.updateScrollView()
-                            await delegate.stopLoading()
-                            await delegate.enableEverything()
-                            
-                        }
                     }
                 }
             }
-            
-            
-        })
+        }
     }
     
     func updateWeatherInfo(forecast: ForecastStruct, index: Int, usersLocation: Bool = false) {
@@ -120,11 +152,46 @@ public class UsersWeatherLocations: NSObject {
                 result.location.name = forecast.location.name
                 result.location.region = forecast.location.region
                 result.location.country = forecast.location.country
+                addLocationToCoreData(location: result)
             }
             
             locationsForecastArray[index] = result
         }
         
+    }
+    
+    func deleteAllCoreData() {
+        do {
+            self.items = try context.fetch(ForecastCore.fetchRequest())
+            if let items = self.items {
+                for item in items {
+                    self.context.delete(item)
+                    do {
+                        try self.context.save()
+                    }
+                    catch {
+                        print(error)
+                    }
+                }
+            }
+        }
+        catch {
+            print ("No CoreData exist or Error populating from CoreData")
+        }
+    }
+    
+    func addAllLocationsToCoreData() {
+        
+        for i in 0..<locationsForecastArray.count {
+            
+            if locationEnabled == true && i == 0 {
+                
+            }
+            else {
+                addLocationToCoreData(location: locationsForecastArray[i])
+            }
+            
+        }
     }
     
     func configureLocationManager() {
@@ -167,6 +234,9 @@ public class UsersWeatherLocations: NSObject {
             locationsForecastArray.remove(at: 0)
             forecastWeatherPages.remove(at: 0)
         }
+        if locationEnabled == nil {
+            updateCoreWeatherPagesWhenLaunching()
+        }
         locationEnabled = false
         if !isUsersLocationsEmpty() {
             if let delegate {
@@ -176,7 +246,6 @@ public class UsersWeatherLocations: NSObject {
                 delegate.changeScrollViewBasedOnArray(index: delegate.oldPageTracker)
                 
                 delegate.changeFirstPageIndicatorImage(LocationOn: false)
-                
                 
                 
                 
@@ -205,14 +274,7 @@ public class UsersWeatherLocations: NSObject {
         
         
     }
-    
 
-
-    
-    
-    
-    
-    
     func addWeatherPage() {
         forecastWeatherPages.append(WeatherView())
         if let delegate {
@@ -220,15 +282,15 @@ public class UsersWeatherLocations: NSObject {
         }
     }
     
-    
-    
-    
-    
+    func addLocationToCoreData(location: ForecastStruct) {
+
+        createForecastCore(coreInfo: location)
+                
+    }
     
     func addLocation(location: ForecastStruct) {
         locationsForecastArray.append(location)
         skipToLocation = false
-        
     }
     
     func deleteLocation(at index: Int) {
@@ -398,41 +460,6 @@ public class UsersWeatherLocations: NSObject {
         }
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    // MARK: Debug functions
-    
-    func debugPrintLocationArray() {
-        print("THIS IS FOR DEBUG PURPOSES!")
-        print(locationsForecastArray)
-    }
-    
-    func debugPrintLocationArrayCount() {
-        print("THIS IS FOR DEBUG PURPOSES!")
-        print(locationsForecastArray.count)
-    }
-    
-   
-    
-    
-    
 }
 
 public let usersInfo = UsersWeatherLocations()
@@ -469,7 +496,6 @@ extension UsersWeatherLocations: CLLocationManagerDelegate {
     func createUsersLocationStruct(lat: Decimal, lon: Decimal) {
         Task {
             let result = try await forecastJson.getForecastDataAsync(lat: lat, lon: lon)
-            //print(result.printReadableForecast())
             
             if locationEnabled == nil || locationEnabled == false {
                 
@@ -488,6 +514,7 @@ extension UsersWeatherLocations: CLLocationManagerDelegate {
                 locationsForecastArray.insert(result, at: 0)
                 if locationEnabled == nil {
                     await delegate.updateScrollView()
+                    updateCoreWeatherPagesWhenLaunching()
                 }
                 locationEnabled = true
                 
@@ -554,4 +581,218 @@ extension UsersWeatherLocations {
         }
     }
     
+}
+
+// MARK: Core Data Functions
+extension UsersWeatherLocations {
+    func createForecastCore(coreInfo: ForecastStruct) {
+        
+        let currentVariable = resultCurrentToCurrentCore(resultCurrent: coreInfo.current)
+        let forecastVariable = resultForecastToForecastCore(resultForecast: coreInfo.forecast)
+        let locationVariable = resultLocationToLocationCore(resultLocation: coreInfo.location)
+        
+        let forecastCoreVariable = ForecastCore(context: self.context)
+        forecastCoreVariable.current = currentVariable
+        forecastCoreVariable.forecast = forecastVariable
+        forecastCoreVariable.location = locationVariable
+        
+        do {
+            try self.context.save()
+        }
+        catch let error as NSError {
+            print("Could not save. \(error)")
+        }
+        
+        
+    }
+    
+    
+    func resultLocationToLocationCore(resultLocation: LocationResult) -> Location {
+        
+        
+        let locationVariable = Location(context: self.context)
+        locationVariable.lat = (resultLocation.lat) as NSDecimalNumber
+        locationVariable.lon = (resultLocation.lon) as NSDecimalNumber
+        locationVariable.name = resultLocation.name
+        locationVariable.region = resultLocation.region
+        locationVariable.country = resultLocation.country
+        locationVariable.tzId = resultLocation.tzId
+        locationVariable.localtimeEpoch = Int64(resultLocation.localtimeEpoch)
+        locationVariable.localtime = resultLocation.localtime
+        
+        return locationVariable
+    }
+
+    func resultForecastToForecastCore(resultForecast: ForecastResult) -> Forecast {
+        
+        let forecastDayVariable = NSOrderedSet(array: resultForecastDayToForecastDayCore(resultForecastDay: resultForecast.forecastday))
+        let forecastVariable = Forecast(context: self.context)
+        forecastVariable.forecastDay = forecastDayVariable
+        
+        return forecastVariable
+
+    }
+    
+    func resultForecastDayToForecastDayCore(resultForecastDay: [ForecastDayResult]) -> [ForecastDay] {
+        
+        var returnForecastDayArray: [ForecastDay] = []
+        
+        
+        
+        for forecastDay in resultForecastDay {
+
+            let dayVariable = resultDayToDayCore(resultDay: forecastDay.day)
+            let astroVariable = resultAstroToAstroCore(resultAstro: forecastDay.astro)
+            
+            let hourVariable = NSOrderedSet(array: resultHourToHourCore(resultHour: forecastDay.hour))
+            
+            
+            let forecastDayVariable = ForecastDay(context: self.context)
+            forecastDayVariable.date = forecastDay.date
+            forecastDayVariable.dateEpoch = Int64(forecastDay.dateEpoch)
+            forecastDayVariable.day = dayVariable
+            forecastDayVariable.astro = astroVariable
+            forecastDayVariable.hour = hourVariable
+            
+            returnForecastDayArray.append(forecastDayVariable)
+            
+        }
+        
+        return returnForecastDayArray
+        
+        
+    }
+    
+    func resultDayToDayCore(resultDay: DayResult) -> Day {
+        
+        let conditionVariable = resultConditionToConditionCore(resultCondition: resultDay.condition)
+        
+        let dayVariable = Day(context: self.context)
+        
+        dayVariable.maxtempC = (resultDay.maxtempC) as NSDecimalNumber
+        dayVariable.maxtempF = (resultDay.maxtempF) as NSDecimalNumber
+        dayVariable.mintempC = (resultDay.mintempC) as NSDecimalNumber
+        dayVariable.mintempF = (resultDay.mintempF) as NSDecimalNumber
+        dayVariable.avgtempC = (resultDay.avgtempC) as NSDecimalNumber
+        dayVariable.avgtempF = (resultDay.avgtempF) as NSDecimalNumber
+        dayVariable.maxwindMph = (resultDay.maxwindMph) as NSDecimalNumber
+        dayVariable.maxwindKph = (resultDay.maxwindKph) as NSDecimalNumber
+        dayVariable.totalprecipMm = (resultDay.totalprecipMm) as NSDecimalNumber
+        dayVariable.totalprecipIn = (resultDay.totalprecipIn) as NSDecimalNumber
+        dayVariable.avgvisKm = (resultDay.avgvisKm) as NSDecimalNumber
+        dayVariable.avgvisMiles = (resultDay.avgvisMiles) as NSDecimalNumber
+        dayVariable.avghumidity = Int64(resultDay.avghumidity)
+        dayVariable.condition = conditionVariable
+        dayVariable.uv = (resultDay.uv) as NSDecimalNumber
+        
+        return dayVariable
+        
+    }
+    
+    func resultAstroToAstroCore(resultAstro: AstroResult) -> Astro {
+        
+        let astroVariable = Astro(context: self.context)
+        astroVariable.sunrise = resultAstro.sunrise
+        astroVariable.sunset = resultAstro.sunset
+        astroVariable.moonrise = resultAstro.moonrise
+        astroVariable.moonset = resultAstro.moonset
+        astroVariable.moonPhase = resultAstro.moonPhase
+        astroVariable.moonIllumination = (resultAstro.moonIllumination) as NSDecimalNumber
+        
+        return astroVariable
+        
+    }
+    
+    func resultHourToHourCore(resultHour: [HourResult]) -> [Hour] {
+        
+        var returnHourArray: [Hour] = []
+        for hour in resultHour {
+            
+            let conditionVariable = resultConditionToConditionCore(resultCondition: hour.condition)
+            let hourvariable = Hour(context: self.context)
+            
+            hourvariable.timeEpoch = Int64(hour.timeEpoch)
+            hourvariable.time = hour.time
+            hourvariable.tempC = (hour.tempC) as NSDecimalNumber
+            hourvariable.tempF = (hour.tempF) as NSDecimalNumber
+            hourvariable.condition = conditionVariable
+            hourvariable.windMph = (hour.windMph) as NSDecimalNumber
+            hourvariable.windKph = (hour.windKph) as NSDecimalNumber
+            hourvariable.windDegree = Int64(hour.windDegree)
+            hourvariable.windDir = hour.windDir
+            hourvariable.pressureMb = (hour.pressureMb) as NSDecimalNumber
+            hourvariable.pressureIn = (hour.pressureIn) as NSDecimalNumber
+            hourvariable.precipMm = (hour.precipMm) as NSDecimalNumber
+            hourvariable.precipIn = (hour.precipIn) as NSDecimalNumber
+            hourvariable.humidity = Int64(hour.humidity)
+            hourvariable.cloud = Int64(hour.cloud)
+            hourvariable.feelslikeC = (hour.feelslikeC) as NSDecimalNumber
+            hourvariable.feelslikeF = (hour.feelslikeF) as NSDecimalNumber
+            hourvariable.windchillC = (hour.windchillC) as NSDecimalNumber
+            hourvariable.windchillF = (hour.windchillF) as NSDecimalNumber
+            hourvariable.heatindexC = (hour.heatindexC) as NSDecimalNumber
+            hourvariable.heatindexF = (hour.heatindexF) as NSDecimalNumber
+            hourvariable.dewpointC = (hour.dewpointC) as NSDecimalNumber
+            hourvariable.dewpointF = (hour.dewpointF) as NSDecimalNumber
+            hourvariable.willItRain = Int64(hour.willItRain)
+            hourvariable.willItSnow = Int64(hour.willItSnow)
+            hourvariable.isDay = Int64(hour.isDay)
+            hourvariable.visKm = (hour.visKm) as NSDecimalNumber
+            hourvariable.visMiles = (hour.visMiles) as NSDecimalNumber
+            hourvariable.chanceOfRain = Int64(hour.chanceOfRain)
+            hourvariable.chanceOfSnow = Int64(hour.chanceOfSnow)
+            hourvariable.gustMph = (hour.gustMph) as NSDecimalNumber
+            hourvariable.gustKph = (hour.gustKph) as NSDecimalNumber
+            hourvariable.uv = (hour.uv) as NSDecimalNumber
+            
+            returnHourArray.append(hourvariable)
+            
+            
+        }
+        
+        return returnHourArray
+        
+    }
+    
+    
+    
+    func resultCurrentToCurrentCore(resultCurrent: CurrentResult) -> Current {
+        
+        let conditionVariable = resultConditionToConditionCore(resultCondition: resultCurrent.condition)
+        
+        let currentVariable = Current(context: self.context)
+        currentVariable.lastUpdated = resultCurrent.lastUpdated
+        currentVariable.lastUpdatedEpoch = Int64(resultCurrent.lastUpdatedEpoch)
+        currentVariable.tempC = (resultCurrent.tempC) as NSDecimalNumber
+        currentVariable.tempF = (resultCurrent.tempF) as NSDecimalNumber
+        currentVariable.feelslikeC = (resultCurrent.feelslikeC) as NSDecimalNumber
+        currentVariable.feelslikeF = (resultCurrent.feelslikeF) as NSDecimalNumber
+        currentVariable.condition = conditionVariable
+        currentVariable.windMph = (resultCurrent.windMph) as NSDecimalNumber
+        currentVariable.windKph = (resultCurrent.windKph) as NSDecimalNumber
+        currentVariable.windDegree = Int64(resultCurrent.windDegree)
+        currentVariable.windDir = resultCurrent.windDir
+        currentVariable.pressureMb = (resultCurrent.pressureMb) as NSDecimalNumber
+        currentVariable.pressureIn = (resultCurrent.pressureIn) as NSDecimalNumber
+        currentVariable.precipMm = (resultCurrent.precipMm) as NSDecimalNumber
+        currentVariable.precipIn = (resultCurrent.precipIn) as NSDecimalNumber
+        currentVariable.humidity = Int64(resultCurrent.humidity)
+        currentVariable.cloud = Int64(resultCurrent.cloud)
+        currentVariable.isDay = Int64(resultCurrent.isDay)
+        currentVariable.uv = (resultCurrent.uv) as NSDecimalNumber
+        currentVariable.gustMph = (resultCurrent.gustMph) as NSDecimalNumber
+        currentVariable.gustKph = (resultCurrent.gustKph) as NSDecimalNumber
+        
+        return currentVariable
+    }
+    
+    func resultConditionToConditionCore(resultCondition: ConditionResult) -> Condition {
+        let conditionVariable = Condition(context: self.context)
+        conditionVariable.icon = resultCondition.icon
+        conditionVariable.text = resultCondition.text
+        conditionVariable.code = Int64(resultCondition.code)
+        
+        return conditionVariable
+        
+    }
 }

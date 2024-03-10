@@ -24,6 +24,7 @@ class MainVC: UIViewController {
     let weatherPageControl = UIPageControl()
     var oldPageTracker: Int = 0
     
+    
     // Syntax to create a UIActivityIndicatorView
     var loadCircle = UIActivityIndicatorView()
     
@@ -50,6 +51,7 @@ class MainVC: UIViewController {
         super.viewWillAppear(animated)
         NotificationCenter.default.addObserver(self, selector: #selector(self.openActivity), name: UIApplication.didBecomeActiveNotification, object: nil)
 
+
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -59,6 +61,8 @@ class MainVC: UIViewController {
             goToLocationVC()
         }
     }
+    
+    
     
     @objc func openActivity() {
         if usersInfo.skipToLocation == true {
@@ -175,7 +179,6 @@ class MainVC: UIViewController {
         pageScrollView.isPagingEnabled = true
         pageScrollView.translatesAutoresizingMaskIntoConstraints = false
         view.insertSubview(pageScrollView, belowSubview: toolBar)
-        //view.addSubview(pageScrollView)
         
         NSLayoutConstraint.activate([
             pageScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -249,7 +252,6 @@ class MainVC: UIViewController {
     }
     
     // Move the scroll view to the position corresponding to the selected page.
-    
     func changeScrollViewBasedOnArray(index: Int) {
         pageScrollView.setContentOffset(.init(x: CGFloat(index) * view.frame.width, y: 0), animated: false)
         let currentTime = usersInfo.locationsForecastArray[index].location.localtime
@@ -478,7 +480,7 @@ extension MainVC: UIScrollViewDelegate {
     // This function is called every time we scroll in the scroll view. Here, we update the page control to match where we are in the scroll view.
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         
-        // have to use self because i want to reference the scrollview variabel i made above and since they share a name not having self would reference all scrollviews instead
+        // Have to use 'self' because I want to reference the scrollview variable I made above, and since they share a name, not having 'self' would reference all scrollviews instead.
         
         guard !(round(Float((self.pageScrollView.contentOffset.x)) / Float(self.pageScrollView.frame.width)).isNaN || round(Float((self.pageScrollView.contentOffset.x)) / Float(self.pageScrollView.frame.width)).isInfinite) else { return }
 
@@ -494,6 +496,7 @@ extension MainVC: UIScrollViewDelegate {
         }
     }
 }
+
 
 
 
