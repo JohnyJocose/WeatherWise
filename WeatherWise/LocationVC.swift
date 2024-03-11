@@ -75,7 +75,7 @@ class LocationVC: UIViewController {
             usersInfo.deleteAllCoreData()
             usersInfo.addAllLocationsToCoreData()
             mainDelegate.updateScrollView()
-            sender.tintColor = .white
+            sender.tintColor = UIColor.label
             locationTable.isEditing = false
         }
         else {
@@ -109,7 +109,7 @@ class LocationVC: UIViewController {
         navigationItem.title = "Weather"
 
         editButton = UIBarButtonItem(image: UIImage(systemName: "pencil"), style: .plain, target: self, action: #selector(buttonPressed(_:)))
-        editButton.tintColor = .white
+        editButton.tintColor = UIColor.label
         navigationItem.rightBarButtonItem = editButton
         
         
@@ -189,7 +189,7 @@ extension LocationVC: UITableViewDelegate, UITableViewDataSource {
             if usersInfo.isLocationEnabled() {
                 // These will check if there's nothing in the edit section.
                 if usersInfo.returnUsersLocationsCount() == 1 {
-                    editButton.tintColor = .white
+                    editButton.tintColor = UIColor.label
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: { [self] in
                         locationTable.isEditing = false
                     })
@@ -199,7 +199,7 @@ extension LocationVC: UITableViewDelegate, UITableViewDataSource {
             if !usersInfo.isLocationEnabled() {
                 // These will check if there's nothing in the edit section.
                 if usersInfo.returnUsersLocationsCount() == 0 {
-                    editButton.tintColor = .white
+                    editButton.tintColor = UIColor.label
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: { [self] in
                         locationTable.isEditing = false
                     })
@@ -232,7 +232,8 @@ extension LocationVC: UITableViewDelegate, UITableViewDataSource {
                 
                 if usersInfo.returnUsersLocationsCount() == 1 {
                     // These will check if there's nothing in the edit section.
-                    editButton.tintColor = .white
+                    
+                    editButton.tintColor = UIColor.label
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: { [self] in
                         locationTable.isEditing = false
                     })
@@ -242,7 +243,7 @@ extension LocationVC: UITableViewDelegate, UITableViewDataSource {
             if !usersInfo.isLocationEnabled() {
                 if usersInfo.returnUsersLocationsCount() == 0 {
                     // These will check if there's nothing in the edit section.
-                    editButton.tintColor = .white
+                    editButton.tintColor = UIColor.label
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: { [self] in
                         locationTable.isEditing = false
                     })

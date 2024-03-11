@@ -165,24 +165,28 @@ class SingularWeatherPageVC: UIViewController {
         verticalStack.translatesAutoresizingMaskIntoConstraints = false
         
         locationLabel.text = "---"
+        locationLabel.textColor = .white
         locationLabel.textAlignment = .center
         locationLabel.numberOfLines = 1
         locationLabel.font = .boldSystemFont(ofSize: 25)
         locationLabel.translatesAutoresizingMaskIntoConstraints = false
         
         tempLabel.text = "--"
+        tempLabel.textColor = .white
         tempLabel.textAlignment = .center
         tempLabel.numberOfLines = 1
         tempLabel.font = .boldSystemFont(ofSize: 40)
         tempLabel.translatesAutoresizingMaskIntoConstraints = false
         
         weatherLabel.text = "--"
+        weatherLabel.textColor = .white
         weatherLabel.textAlignment = .center
         weatherLabel.numberOfLines = 2
         weatherLabel.font = .systemFont(ofSize: 25)
         weatherLabel.translatesAutoresizingMaskIntoConstraints = false
         
         highLowLabel.text = "L:--°  H:--°"
+        highLowLabel.textColor = .white
         highLowLabel.textAlignment = .center
         highLowLabel.numberOfLines = 1
         highLowLabel.font = .boldSystemFont(ofSize: 20)
